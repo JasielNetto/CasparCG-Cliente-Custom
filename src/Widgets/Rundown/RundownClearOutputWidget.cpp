@@ -308,18 +308,8 @@ void RundownClearOutputWidget::executeClearVideolayer()
     this->clearVideoLayerScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
-    }
 
     if (this->markUsedItems)
         setUsed(true);
@@ -331,23 +321,10 @@ void RundownClearOutputWidget::executeClearChannel()
     this->clearVideoLayerScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->clearChannel(this->command.getChannel());
         device->clearMixerChannel(this->command.getChannel());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->clearChannel(this->command.getChannel());
-            deviceShadow->clearMixerChannel(this->command.getChannel());
-        }
     }
 
     if (this->markUsedItems)

@@ -20,6 +20,8 @@ qt_add_library(widgets
     DurationWidget.cpp DurationWidget.h DurationWidget.ui
     HelpDialog.cpp HelpDialog.h HelpDialog.ui
     ImportDeviceDialog.cpp ImportDeviceDialog.h ImportDeviceDialog.ui
+    MirrorDialog.cpp MirrorDialog.h
+    MirrorStatusWidget.cpp MirrorStatusWidget.h
     Inspector/HttpDataTreeBaseWidget.cpp Inspector/HttpDataTreeBaseWidget.h
     Inspector/InspectorAnchorWidget.cpp Inspector/InspectorAnchorWidget.h Inspector/InspectorAnchorWidget.ui
     Inspector/InspectorAudioWidget.cpp Inspector/InspectorAudioWidget.h Inspector/InspectorAudioWidget.ui

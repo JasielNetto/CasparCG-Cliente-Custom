@@ -100,6 +100,12 @@ INSERT INTO Configuration (Name, Value) VALUES('StreamPort', '9250');
 INSERT INTO Configuration (Name, Value) VALUES('LogLevel', '-1');
 INSERT INTO Configuration (Name, Value) VALUES('UseDropFrameNotation', 'false');
 INSERT INTO Configuration (Name, Value) VALUES('OpenRecent', '10');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorEnabled', 'false');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorSourceDevice', '');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorSourceChannel', '1');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorTargetDevice', '');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorTargetChannel', '2');
+INSERT INTO Configuration (Name, Value) VALUES('MirrorVerbs', 'PLAY,LOAD,STOP');
 INSERT INTO Configuration (Name, Value) VALUES('DatabaseVersion', '216');
 
 INSERT INTO Chroma (Value) VALUES('None');

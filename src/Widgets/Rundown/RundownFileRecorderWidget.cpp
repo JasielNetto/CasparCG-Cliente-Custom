@@ -305,18 +305,8 @@ void RundownFileRecorderWidget::executeStop()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->stopFileRecorder(this->command.getChannel(), this->command.getOutput());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->stopFileRecorder(this->command.getChannel(), this->command.getOutput());
-    }
 
     this->widgetOscTime->setRecording(false);
 }
@@ -324,18 +314,8 @@ void RundownFileRecorderWidget::executeStop()
 void RundownFileRecorderWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->startFileRecorder(this->command.getChannel(), this->command.getOutput(), this->command.getPreset(), this->command.getWithAlpha());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->startFileRecorder(this->command.getChannel(), this->command.getOutput(), this->command.getPreset(), this->command.getWithAlpha());
-    }
 
     if (this->markUsedItems)
         setUsed(true);

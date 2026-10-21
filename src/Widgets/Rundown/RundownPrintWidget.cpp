@@ -274,18 +274,8 @@ void RundownPrintWidget::executeStop()
 void RundownPrintWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->print(this->command.getChannel(), this->command.getOutput());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->print(this->command.getChannel(), this->command.getOutput());
-    }
 
     if (this->markUsedItems)
         setUsed(true);

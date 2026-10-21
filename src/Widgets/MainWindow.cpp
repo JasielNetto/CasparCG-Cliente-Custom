@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include "AboutDialog.h"
 #include "HelpDialog.h"
+#include "MirrorStatusWidget.h"
 #include "SettingsDialog.h"
 
 #include "Version.h"
@@ -172,6 +173,8 @@ void MainWindow::setupMenu()
     this->menuBar->addMenu(this->rundownMenu)->setText("Rundown");
     this->menuBar->addMenu(this->playoutMenu)->setText("Playout");
     this->menuBar->addMenu(this->helpMenu)->setText("Help");
+
+    this->menuBar->setCornerWidget(new MirrorStatusWidget(this->menuBar), Qt::TopRightCorner);
 
     setMenuBar(this->menuBar);
 }

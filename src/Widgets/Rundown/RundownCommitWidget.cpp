@@ -277,18 +277,8 @@ void RundownCommitWidget::executeStop()
 void RundownCommitWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->setCommit(this->command.getChannel());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->setCommit(this->command.getChannel());
-    }
 
     if (this->markUsedItems)
         setUsed(true);
@@ -300,22 +290,10 @@ void RundownCommitWidget::executePlayPreview()
     if (deviceModel != NULL && deviceModel->getPreviewChannel() > 0)
     {
         const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-        if (device != NULL && device->isConnected())
+        if (device != NULL && device->canSend())
             device->setCommit(deviceModel->getPreviewChannel());
     }
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        if (model.getPreviewChannel() > 0)
-        {
-            const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-            if (deviceShadow != NULL && deviceShadow->isConnected())
-                deviceShadow->setCommit(deviceModel->getPreviewChannel());
-        }
-    }
 }
 
 void RundownCommitWidget::channelChanged(int channel)

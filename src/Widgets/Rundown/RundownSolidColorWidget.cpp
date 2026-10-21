@@ -292,18 +292,8 @@ void RundownSolidColorWidget::executeStop()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->stop(this->command.getChannel(), this->command.getVideolayer());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->stop(this->command.getChannel(), this->command.getVideolayer());
-    }
 
     this->paused = false;
     this->loaded = false;
@@ -313,7 +303,7 @@ void RundownSolidColorWidget::executeStop()
 void RundownSolidColorWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         if (this->loaded)
         {
@@ -324,27 +314,6 @@ void RundownSolidColorWidget::executePlay()
             device->playColor(this->command.getChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
                               this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
                               this->command.getDirection(), this->command.getUseAuto());
-        }
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            if (this->loaded)
-            {
-                deviceShadow->play(this->command.getChannel(), this->command.getVideolayer());
-            }
-            else
-            {
-                deviceShadow->playColor(this->command.getChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
-                                        this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                        this->command.getDirection(), this->command.getUseAuto());
-            }
         }
     }
 
@@ -362,27 +331,12 @@ void RundownSolidColorWidget::executePause()
         return;
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         if (this->paused)
             device->play(this->command.getChannel(), this->command.getVideolayer());
         else
             device->pause(this->command.getChannel(), this->command.getVideolayer());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            if (this->paused)
-                deviceShadow->play(this->command.getChannel(), this->command.getVideolayer());
-            else
-                deviceShadow->pause(this->command.getChannel(), this->command.getVideolayer());
-        }
     }
 
     this->paused = !this->paused;
@@ -391,25 +345,11 @@ void RundownSolidColorWidget::executePause()
 void RundownSolidColorWidget::executeLoad()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->loadColor(this->command.getChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
                           this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
                           this->command.getDirection(), this->command.getUseAuto());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->loadColor(this->command.getChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
-                                    this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                    this->command.getDirection(), this->command.getUseAuto());
-        }
     }
 
     this->loaded = true;
@@ -423,7 +363,7 @@ void RundownSolidColorWidget::executeLoadPreview()
     if (deviceModel != NULL && deviceModel->getPreviewChannel() > 0)
     {
         const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-        if (device != NULL && device->isConnected())
+        if (device != NULL && device->canSend())
         {
             device->loadColor(deviceModel->getPreviewChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
                               this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
@@ -431,22 +371,6 @@ void RundownSolidColorWidget::executeLoadPreview()
         }
     }
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        if (model.getPreviewChannel() > 0)
-        {
-            const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-            if (deviceShadow != NULL && deviceShadow->isConnected())
-            {
-                deviceShadow->loadColor(model.getPreviewChannel(), this->command.getVideolayer(), this->command.getPremultipliedColor(),
-                                        this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                        this->command.getDirection(), false);
-            }
-        }
-    }
 }
 
 void RundownSolidColorWidget::executeClearVideolayer()
@@ -454,18 +378,8 @@ void RundownSolidColorWidget::executeClearVideolayer()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
         device->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-            deviceShadow->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
-    }
 
     this->paused = false;
     this->loaded = false;
@@ -477,23 +391,10 @@ void RundownSolidColorWidget::executeClearChannel()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->clearChannel(this->command.getChannel());
         device->clearMixerChannel(this->command.getChannel());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->clearChannel(this->command.getChannel());
-            deviceShadow->clearMixerChannel(this->command.getChannel());
-        }
     }
 
     this->paused = false;

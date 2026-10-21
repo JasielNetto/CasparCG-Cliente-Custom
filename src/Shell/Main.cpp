@@ -8,6 +8,7 @@
 #include "../Core/GpiManager.h"
 #include "../Core/LibraryManager.h"
 #include "../Core/DeviceManager.h"
+#include "../Core/MirrorManager.h"
 #include "../Core/OscDeviceManager.h"
 #include "../Core/OscWebSocketManager.h"
 #include "../Core/Events/Rundown/OpenRundownEvent.h"
@@ -305,6 +306,7 @@ int main(int argc, char* argv[])
 
     LibraryManager::getInstance().initialize();
     DeviceManager::getInstance().initialize();
+    MirrorManager::getInstance().initialize();
     OscDeviceManager::getInstance().initialize();
     OscWebSocketManager::getInstance().initialize();
 

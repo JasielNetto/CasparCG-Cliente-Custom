@@ -315,35 +315,16 @@ void RundownCustomCommandWidget::executeStop()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getStopCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getStopCommand().isEmpty())
         device->sendCommand(this->command.getStopCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getStopCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getStopCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getPlayCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getPlayCommand().isEmpty())
         device->sendCommand(this->command.getPlayCommand());
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getPlayCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getPlayCommand());
-    }
 
     if (this->markUsedItems)
         setUsed(true);
@@ -352,103 +333,49 @@ void RundownCustomCommandWidget::executePlay()
 void RundownCustomCommandWidget::executeLoad()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getLoadCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getLoadCommand().isEmpty())
         device->sendCommand(this->command.getLoadCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getLoadCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getLoadCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executePause()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getPauseCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getPauseCommand().isEmpty())
         device->sendCommand(this->command.getPauseCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getPauseCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getPauseCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeNext()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getNextCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getNextCommand().isEmpty())
         device->sendCommand(this->command.getNextCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getNextCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getNextCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeUpdate()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getUpdateCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getUpdateCommand().isEmpty())
         device->sendCommand(this->command.getUpdateCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getUpdateCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getUpdateCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeInvoke()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getInvokeCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getInvokeCommand().isEmpty())
         device->sendCommand(this->command.getInvokeCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getInvokeCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getInvokeCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executePreview()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getPreviewCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getPreviewCommand().isEmpty())
         device->sendCommand(this->command.getPreviewCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getPreviewCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getPreviewCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeClear()
@@ -456,18 +383,9 @@ void RundownCustomCommandWidget::executeClear()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getClearCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getClearCommand().isEmpty())
         device->sendCommand(this->command.getClearCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getClearCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getClearCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeClearVideolayer()
@@ -475,18 +393,9 @@ void RundownCustomCommandWidget::executeClearVideolayer()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getClearVideolayerCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getClearVideolayerCommand().isEmpty())
         device->sendCommand(this->command.getClearVideolayerCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getClearVideolayerCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getClearVideolayerCommand());
-    }
 }
 
 void RundownCustomCommandWidget::executeClearChannel()
@@ -494,18 +403,9 @@ void RundownCustomCommandWidget::executeClearChannel()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected() && !this->command.getClearChannelCommand().isEmpty())
+    if (device != NULL && device->canSend() && !this->command.getClearChannelCommand().isEmpty())
         device->sendCommand(this->command.getClearChannelCommand());
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected() && !this->command.getClearChannelCommand().isEmpty())
-            deviceShadow->sendCommand(this->command.getClearChannelCommand());
-    }
 }
 
 void RundownCustomCommandWidget::delayChanged(int delay)

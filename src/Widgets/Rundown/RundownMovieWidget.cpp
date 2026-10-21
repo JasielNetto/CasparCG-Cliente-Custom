@@ -426,7 +426,7 @@ void RundownMovieWidget::executeStop()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->stop(this->command.getChannel(), this->command.getVideolayer());
 
@@ -434,22 +434,6 @@ void RundownMovieWidget::executeStop()
         const QSharedPointer<DeviceModel> deviceModel = DeviceManager::getInstance().getDeviceModelByName(this->model.getDeviceName());
         if (deviceModel != NULL && deviceModel->getPreviewChannel() > 0)
             device->stop(deviceModel->getPreviewChannel(), this->command.getVideolayer());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->stop(this->command.getChannel(), this->command.getVideolayer());
-
-            // Stop preview channels item.
-            if (model.getPreviewChannel() > 0)
-                deviceShadow->stop(model.getPreviewChannel(), this->command.getVideolayer());
-        }
     }
 
     this->paused = false;
@@ -468,7 +452,7 @@ void RundownMovieWidget::executeStop()
 void RundownMovieWidget::executePlay()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         if (this->loaded)
         {
@@ -493,38 +477,6 @@ void RundownMovieWidget::executePlay()
         }
     }
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            if (this->loaded)
-            {
-                deviceShadow->play(this->command.getChannel(), this->command.getVideolayer());
-            }
-            else
-            {
-                if (this->command.getAutoPlay())
-                {
-                    deviceShadow->playMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
-                                            this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                            this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
-                                            this->command.getLoop(), true);
-                }
-                else
-                {
-                    deviceShadow->playMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
-                                            this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                            this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
-                                            this->command.getLoop(), this->command.getAutoPlay());
-                }
-            }
-        }
-    }
-
     if (this->markUsedItems)
         setUsed(true);
 
@@ -543,27 +495,12 @@ void RundownMovieWidget::executePause()
         return;
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         if (this->paused)
             device->resume(this->command.getChannel(), this->command.getVideolayer());
         else
             device->pause(this->command.getChannel(), this->command.getVideolayer());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            if (this->paused)
-                deviceShadow->resume(this->command.getChannel(), this->command.getVideolayer());
-            else
-                deviceShadow->pause(this->command.getChannel(), this->command.getVideolayer());
-        }
     }
 
     this->paused = !this->paused;
@@ -574,27 +511,12 @@ void RundownMovieWidget::executePause()
 void RundownMovieWidget::executeLoad()
 {
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->loadMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
                           this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
                           this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
                           this->command.getLoop(), this->command.getFreezeOnLoad(), false);
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice>  deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->loadMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
-                                    this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                    this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
-                                    this->command.getLoop(), this->command.getFreezeOnLoad(), false);
-        }
     }
 
     this->loaded = true;
@@ -609,7 +531,7 @@ void RundownMovieWidget::executeLoadPreview()
     if (deviceModel != NULL && deviceModel->getPreviewChannel() > 0)
     {
         const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-        if (device != NULL && device->isConnected())
+        if (device != NULL && device->canSend())
         {
             device->loadMovie(deviceModel->getPreviewChannel(), this->command.getVideolayer(), this->command.getVideoName(),
                               this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
@@ -618,23 +540,6 @@ void RundownMovieWidget::executeLoadPreview()
         }
     }
 
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        if (model.getPreviewChannel() > 0)
-        {
-            const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-            if (deviceShadow != NULL && deviceShadow->isConnected())
-            {
-                deviceShadow->loadMovie(model.getPreviewChannel(), this->command.getVideolayer(), this->command.getVideoName(),
-                                        this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                        this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
-                                        this->command.getLoop(), true, false);
-            }
-        }
-    }
 }
 
 void RundownMovieWidget::executeNext()
@@ -642,28 +547,13 @@ void RundownMovieWidget::executeNext()
     if (this->command.getAutoPlay())
     {
         const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-        if (device != NULL && device->isConnected())
+        if (device != NULL && device->canSend())
         {
             device->playMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
                               this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
                               this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
                               this->command.getLoop(), false);
 
-        }
-
-        foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-        {
-            if (model.getShadow() == "No")
-                continue;
-
-            const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-            if (deviceShadow != NULL && deviceShadow->isConnected())
-            {
-                deviceShadow->playMovie(this->command.getChannel(), this->command.getVideolayer(), this->command.getVideoName(),
-                                        this->command.getTransition(), this->command.getTransitionDuration(), this->command.getTween(),
-                                        this->command.getDirection(), this->command.getSeek(), this->command.getLength(),
-                                        this->command.getLoop(), false);
-            }
         }
 
         this->paused = false;
@@ -680,7 +570,7 @@ void RundownMovieWidget::executeClearVideolayer()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
 
@@ -688,22 +578,6 @@ void RundownMovieWidget::executeClearVideolayer()
         const QSharedPointer<DeviceModel> deviceModel = DeviceManager::getInstance().getDeviceModelByName(this->model.getDeviceName());
         if (deviceModel != NULL && deviceModel->getPreviewChannel() > 0)
             device->clearVideolayer(deviceModel->getPreviewChannel(), this->command.getVideolayer());
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->clearVideolayer(this->command.getChannel(), this->command.getVideolayer());
-
-            // Clear preview channels videolayer.
-            if (model.getPreviewChannel() > 0)
-                deviceShadow->clearVideolayer(model.getPreviewChannel(), this->command.getVideolayer());
-        }
     }
 
     this->paused = false;
@@ -724,7 +598,7 @@ void RundownMovieWidget::executeClearChannel()
     this->itemScheduler.cancel();
 
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(this->model.getDeviceName());
-    if (device != NULL && device->isConnected())
+    if (device != NULL && device->canSend())
     {
         device->clearChannel(this->command.getChannel());
         device->clearMixerChannel(this->command.getChannel());
@@ -735,26 +609,6 @@ void RundownMovieWidget::executeClearChannel()
         {
             device->clearChannel(deviceModel->getPreviewChannel());
             device->clearMixerChannel(deviceModel->getPreviewChannel());
-        }
-    }
-
-    foreach (const DeviceModel& model, DeviceManager::getInstance().getDeviceModels())
-    {
-        if (model.getShadow() == "No")
-            continue;
-
-        const QSharedPointer<CasparDevice> deviceShadow = DeviceManager::getInstance().getDeviceByName(model.getName());
-        if (deviceShadow != NULL && deviceShadow->isConnected())
-        {
-            deviceShadow->clearChannel(this->command.getChannel());
-            deviceShadow->clearMixerChannel(this->command.getChannel());
-
-            // Clear preview channel.
-            if (model.getPreviewChannel() > 0)
-            {
-                deviceShadow->clearChannel(model.getPreviewChannel());
-                deviceShadow->clearMixerChannel(model.getPreviewChannel());
-            }
         }
     }
 

@@ -13,6 +13,7 @@ qt_add_library(caspar
     STATIC
     AmcpDevice.cpp AmcpDevice.h
     CasparDevice.cpp CasparDevice.h
+    MirrorTranslator.h
     Models/CasparData.cpp Models/CasparData.h
     Models/CasparMedia.cpp Models/CasparMedia.h
     Models/CasparTemplate.cpp Models/CasparTemplate.h
@@ -28,6 +29,9 @@ target_include_directories(caspar PUBLIC
 target_compile_definitions(caspar PUBLIC
     CASPAR_LIBRARY
 )
+
+# MirrorTranslator.h usa std::string_view
+target_compile_features(caspar PUBLIC cxx_std_17)
 
 target_link_libraries(caspar PUBLIC
     common

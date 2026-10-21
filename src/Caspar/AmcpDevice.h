@@ -1,8 +1,11 @@
 #pragma once
 
 #include "Shared.h"
+#include "MirrorTranslator.h"
 
+#include <QtCore/QByteArray>
 #include <QtCore/QObject>
+#include <QtCore/QPointer>
 
 class QObject;
 class QTcpSocket;
@@ -23,6 +26,19 @@ class CASPAR_EXPORT AmcpDevice : public QObject
         bool isConnected() const;
         int getPort() const;
         const QString& getAddress() const;
+
+        // --- Mirror (redundancia cruzada) ---
+        // Faz com que os comandos habilitados em 'rule' enviados a ESTE dispositivo no canal de origem
+        // tambem sejam enviados a 'target' no canal de destino, no mesmo instante (mesmo turno do loop de eventos).
+        // Deve ser chamado e usado somente na thread da interface (como o restante do envio de comandos).
+        void setMirror(AmcpDevice* target, const mirror::Rule& rule);
+        void clearMirror();
+        bool isMirrorActive() const;
+        // true se um comando enviado a este dispositivo chega a algum servidor: ele proprio conectado,
+        // ou (com Mirror ativo) o alvo do Mirror conectado. Garante o failover quando o principal cai.
+        bool canSend() const;
+        quint64 getMirroredCount() const;
+        quint64 getMirrorDroppedCount() const;
 
         Q_SLOT void connectDevice();
 
@@ -83,6 +99,14 @@ class CASPAR_EXPORT AmcpDevice : public QObject
 
         bool connected = false;
         bool disableCommands = false;
+
+        QPointer<AmcpDevice> mirrorTarget;
+        mirror::Rule mirrorRule;
+        quint64 mirroredCount = 0;
+        quint64 mirrorDroppedCount = 0;
+
+        // Escreve uma linha ja pronta (com \r\n) neste dispositivo em nome de outro (Mirror).
+        bool mirrorWrite(const QByteArray& payload);
 
         QString fragments;
 

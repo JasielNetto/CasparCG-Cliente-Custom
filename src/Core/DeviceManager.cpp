@@ -1,5 +1,6 @@
 #include "DeviceManager.h"
 #include "DatabaseManager.h"
+#include "MirrorManager.h"
 #include "Events/ConnectionStateChangedEvent.h"
 #include "Events/DataChangedEvent.h"
 #include "Events/MediaChangedEvent.h"
@@ -96,6 +97,9 @@ void DeviceManager::refresh()
             device->connectDevice();
         }
     }
+
+    // Os dispositivos podem ter sido recriados: religa a regra do Mirror.
+    MirrorManager::getInstance().apply();
 }
 
 QList<DeviceModel> DeviceManager::getDeviceModels() const

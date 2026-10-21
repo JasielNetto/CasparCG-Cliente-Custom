@@ -127,6 +127,7 @@ qt_add_library(core
     Events/ToggleFullscreenEvent.cpp Events/ToggleFullscreenEvent.h
     GpiManager.cpp GpiManager.h
     LibraryManager.cpp LibraryManager.h
+    MirrorManager.cpp MirrorManager.h
     Models/BlendModeModel.cpp Models/BlendModeModel.h
     Models/ChromaModel.cpp Models/ChromaModel.h
     Models/ConfigurationModel.cpp Models/ConfigurationModel.h
@@ -190,6 +191,7 @@ set(Core_resource_files
     "Sql/ChangeScript-215.sql"
     "Sql/ChangeScript-216.sql"
     "Sql/ChangeScript-217.sql"
+    "Sql/ChangeScript-218.sql"
     "Sql/Schema.sql"
 )
 

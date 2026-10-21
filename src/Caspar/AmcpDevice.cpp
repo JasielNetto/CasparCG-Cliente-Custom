@@ -84,14 +84,91 @@ const QString& AmcpDevice::getAddress() const
     return this->address;
 }
 
+void AmcpDevice::setMirror(AmcpDevice* target, const mirror::Rule& rule)
+{
+    this->mirrorTarget = target;
+    this->mirrorRule = rule;
+    this->mirrorRule.enabled = rule.enabled && target != nullptr;
+}
+
+void AmcpDevice::clearMirror()
+{
+    this->mirrorTarget = nullptr;
+    this->mirrorRule = mirror::Rule();
+}
+
+bool AmcpDevice::isMirrorActive() const
+{
+    return this->mirrorRule.enabled && !this->mirrorTarget.isNull();
+}
+
+bool AmcpDevice::canSend() const
+{
+    if (this->connected)
+        return true;
+
+    return isMirrorActive() && this->mirrorTarget->connected;
+}
+
+quint64 AmcpDevice::getMirroredCount() const
+{
+    return this->mirroredCount;
+}
+
+quint64 AmcpDevice::getMirrorDroppedCount() const
+{
+    return this->mirrorDroppedCount;
+}
+
+bool AmcpDevice::mirrorWrite(const QByteArray& payload)
+{
+    if (!this->connected || this->disableCommands)
+        return false;
+
+    this->socket->write(payload);
+    this->socket->flush();
+
+    qDebug("Mirrored message to %s:%d: %s", qPrintable(this->address), this->port, payload.trimmed().constData());
+
+    return true;
+}
+
 void AmcpDevice::writeMessage(const QString& message)
 {
-    if (this->connected && !this->disableCommands)
+    const bool writeOwn = this->connected && !this->disableCommands;
+    const bool tryMirror = !this->disableCommands && isMirrorActive();
+
+    if (!writeOwn && !tryMirror)
+        return;
+
+    // Codifica uma unica vez; o mesmo buffer serve para o envio proprio e para a traducao do Mirror.
+    QByteArray line = message.trimmed().toUtf8();
+
+    // Traducao do Mirror ANTES de qualquer escrita, para que os dois envios saiam colados.
+    std::string translated;
+    const bool mirrored = tryMirror && mirror::translate(std::string_view(line.constData(), static_cast<size_t>(line.size())), this->mirrorRule, translated);
+
+    line.append("\r\n");
+
+    if (writeOwn)
     {
-        this->socket->write(QString("%1\r\n").arg(message.trimmed()).toUtf8());
+        this->socket->write(line);
         this->socket->flush();
 
-        qDebug("Sent message to %s:%d: %s\\r\\n", qPrintable(this->address), this->port, qPrintable(message.trimmed()));
+        qDebug("Sent message to %s:%d: %s", qPrintable(this->address), this->port, line.trimmed().constData());
+    }
+
+    if (mirrored)
+    {
+        QByteArray payload(translated.data(), static_cast<qsizetype>(translated.size()));
+        payload.append("\r\n");
+
+        // O alvo e independente: se estiver desconectado, o comando e descartado (nao enfileirado, para
+        // nunca reproduzir comandos velhos ao reconectar) e a falha nao afeta o envio ao servidor principal.
+        if (this->mirrorTarget->mirrorWrite(payload))
+            ++this->mirroredCount;
+        else
+            ++this->mirrorDroppedCount;
     }
 }
 

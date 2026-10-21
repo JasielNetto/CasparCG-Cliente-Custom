@@ -220,7 +220,7 @@
    <item row="7" column="2" colspan="2">
     <widget class="QCheckBox" name="checkBoxShadow">
      <property name="text">
-      <string>Shadow server</string>
+      <string>Hidden server (library / inspector)</string>
      </property>
     </widget>
    </item>
