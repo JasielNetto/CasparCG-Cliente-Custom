@@ -1,6 +1,8 @@
 // Testes do núcleo de execução (src/Engine), sem Qt e sem servidor real.
 // Build: ver tools/tests/engine/CMakeLists.txt ou o comando em PROJECT_CONTEXT.md.
 
+#include "AmcpFormat.h"
+#include "ClipEndDetector.h"
 #include "Conjunto.h"
 #include "Sequence.h"
 #include "FakePlayoutPort.h"
@@ -338,6 +340,68 @@ static void sequenciaTrocaDeDestinoTiraAnterior()
     CHECK(port.ops() == expected);
 }
 
+// ---------- AMCP ----------
+
+static void amcpFormataComandos()
+{
+    const Endpoint vt{ "S1", 1, 10 };
+    CHECK(amcp::loadBg(vt, item("a", LogicalResource::Vt, "jornal/abertura")) == "LOADBG 1-10 \"jornal/abertura\"");
+    Item looped = item("b", LogicalResource::Vt, "vinheta");
+    looped.loop = true;
+    CHECK(amcp::loadBg(vt, looped) == "LOADBG 1-10 \"vinheta\" LOOP");
+    CHECK(amcp::play(vt) == "PLAY 1-10");
+    CHECK(amcp::stop({ "S2", 2, 30 }) == "STOP 2-30");
+    CHECK(amcp::request("e1", "PLAY 1-10") == "REQ e1 PLAY 1-10");
+    CHECK(amcp::quote("a \"b\" c\\d") == "\"a \\\"b\\\" c\\\\d\"");
+    CHECK(amcp::quote("not\xC3\xAD" "cias") == "\"not\xC3\xAD" "cias\"");
+}
+
+static void amcpLeRespostas()
+{
+    auto r = amcp::parseResponse("RES e12 202 LOADBG OK\r\n");
+    CHECK(r && r->id == "e12" && r->code == 202 && r->text == "LOADBG OK" && r->ok());
+
+    r = amcp::parseResponse("RES e13 404 LOADBG ERROR");
+    CHECK(r && r->code == 404 && !r->ok());
+
+    r = amcp::parseResponse("RES e14 200 INFO OK");
+    CHECK(r && r->ok());
+
+    CHECK(!amcp::parseResponse("202 PLAY OK"));
+    CHECK(!amcp::parseResponse("RES"));
+    CHECK(!amcp::parseResponse("RES e15"));
+    CHECK(!amcp::parseResponse("RES e16 2x2 PLAY OK"));
+    CHECK(!amcp::parseResponse("RESULT e17 202 PLAY OK"));
+}
+
+// ---------- Fim de clipe ----------
+
+static void fimDeClipeDisparaUmaVez()
+{
+    ClipEndDetector d(0.08);
+    CHECK(!d.update(0.0, 10.0));
+    CHECK(!d.update(5.0, 10.0));
+    CHECK(d.update(9.96, 10.0));
+    CHECK(!d.update(10.0, 10.0));
+    CHECK(!d.update(10.0, 10.0));   // clipe parado no último quadro
+}
+
+static void fimDeClipeRearmaComNovoClipe()
+{
+    ClipEndDetector d(0.08);
+    CHECK(d.update(10.0, 10.0));
+    CHECK(!d.update(10.0, 10.0));   // pacote atrasado do clipe anterior após o take
+    CHECK(!d.update(0.04, 30.0));   // novo clipe começou: rearma
+    CHECK(d.update(29.95, 30.0));
+}
+
+static void fimDeClipeIgnoraDuracaoDesconhecida()
+{
+    ClipEndDetector d;
+    CHECK(!d.update(100.0, 0.0));
+    CHECK(!d.update(200.0, -1.0));
+}
+
 int main()
 {
     const std::vector<std::pair<const char*, std::function<void()>>> tests = {
@@ -359,7 +423,12 @@ int main()
         { "sequência: fim antes da pré-carga", sequenciaFimAntesDaPreCarga },
         { "sequência: destruída com respostas pendentes", sequenciaDestruidaComRespostasPendentes },
         { "sequência: recurso sem destino não inicia", sequenciaRecursoSemDestinoNaoInicia },
-        { "sequência: troca de destino tira o anterior", sequenciaTrocaDeDestinoTiraAnterior } };
+        { "sequência: troca de destino tira o anterior", sequenciaTrocaDeDestinoTiraAnterior },
+        { "amcp: formata comandos", amcpFormataComandos },
+        { "amcp: lê respostas RES", amcpLeRespostas },
+        { "fim de clipe: dispara uma vez", fimDeClipeDisparaUmaVez },
+        { "fim de clipe: rearma com novo clipe", fimDeClipeRearmaComNovoClipe },
+        { "fim de clipe: ignora duração desconhecida", fimDeClipeIgnoraDuracaoDesconhecida } };
 
     for (const auto& [name, test] : tests)
     {

@@ -11,6 +11,7 @@ include(GNUInstallDirs)
 
 qt_add_library(core
     STATIC
+    AmcpPlayoutPort.cpp AmcpPlayoutPort.h
     Animations/ActiveAnimation.cpp Animations/ActiveAnimation.h
     Commands/AbstractCommand.cpp Commands/AbstractCommand.h
     Commands/AbstractPlayoutCommand.cpp Commands/AbstractPlayoutCommand.h
@@ -147,6 +148,7 @@ qt_add_library(core
     Models/TransitionModel.cpp Models/TransitionModel.h
     Models/TweenModel.cpp Models/TweenModel.h
     Models/TypeModel.cpp Models/TypeModel.h
+    OscClipEndWatcher.cpp OscClipEndWatcher.h
     OscDeviceManager.cpp OscDeviceManager.h
     OscSubscription.cpp OscSubscription.h
     OscWebSocketManager.cpp OscWebSocketManager.h
@@ -168,6 +170,7 @@ target_compile_definitions(core PUBLIC
 
 target_link_libraries(core PUBLIC
     caspar
+    engine
     common
     gpi
     osc

@@ -50,6 +50,7 @@ if (MSVC OR APPLE)
 endif()
 
 
+add_subdirectory(Engine)
 add_subdirectory(Common)
 add_subdirectory(Caspar)
 add_subdirectory(Web)

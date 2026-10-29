@@ -130,6 +130,19 @@ int main()
     // --- nome com acento e espaco no clipe passa intacto ---
     CHECK(tr("PLAY 1-10 \"not\xC3\xAD" "cias/aber tura\" MIX 25", rule()) == "PLAY 2-10 \"not\xC3\xAD" "cias/aber tura\" MIX 25");
 
+    // --- REQ <id> <comando>: replica o comando interno sem o prefixo REQ ---
+    CHECK(tr("REQ e1 LOADBG 1-10 \"clip\" LOOP", rule()) == "LOADBG 2-10 \"clip\" LOOP");
+    CHECK(tr("req e2 PLAY 1-10", rule()) == "PLAY 2-10");
+    CHECK(tr("REQ   e3   STOP 1-20", rule()) == "STOP 2-20");
+    CHECK(tr("REQ e4 PLAY 3-10", rule()) == "<nao>");              // outro canal
+    CHECK(tr("REQ e5 INFO", rule()) == "<nao>");                   // verbo nao habilitado
+    CHECK(tr("REQ e6 PAUSE 1-10", rule()) == "<nao>");             // opcional desligado
+    CHECK(tr("REQ e6 PAUSE 1-10", rule(1, 2, mirror::AllVerbs)) == "PAUSE 2-10");
+    CHECK(tr("REQ", rule()) == "<nao>");
+    CHECK(tr("REQ e7", rule()) == "<nao>");
+    CHECK(tr("REQ e8 REQ e9 PLAY 1-10", rule()) == "<nao>");      // aninhado
+    CHECK(tr("REQUEST 1-10", rule()) == "<nao>");
+
     if (failures)
     {
         std::printf("%d verificacao(oes) falharam\n", failures);

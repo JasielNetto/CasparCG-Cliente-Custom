@@ -110,7 +110,30 @@ namespace mirror
         while (i < n && isAlpha(message[i]))
             ++i;
 
-        const std::uint32_t bit = classify(message.substr(verbStart, i - verbStart));
+        const std::string_view verb = message.substr(verbStart, i - verbStart);
+
+        // "REQ <id> <comando>": o comando interno e replicado SEM o prefixo REQ, para que a resposta
+        // do destino nao seja confundida com a resposta da origem (o id pertence a origem).
+        if (equalsNoCase(verb, "REQ"))
+        {
+            if (i >= n || !isSpace(message[i]))
+                return false;
+            while (i < n && isSpace(message[i]))
+                ++i;
+            const std::size_t idStart = i;
+            while (i < n && !isSpace(message[i]))
+                ++i;
+            if (i == idStart)
+                return false;
+            while (i < n && isSpace(message[i]))
+                ++i;
+            const std::string_view inner = message.substr(i);
+            if (inner.size() >= 3 && equalsNoCase(inner.substr(0, 3), "REQ"))
+                return false;  // REQ aninhado nao e valido
+            return translate(inner, rule, out);
+        }
+
+        const std::uint32_t bit = classify(verb);
         if (bit == VerbNone || (rule.verbs & bit) == 0)
             return false;
 

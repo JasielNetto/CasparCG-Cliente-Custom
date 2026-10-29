@@ -6,6 +6,8 @@ para o Servidor/Canal de destino (ex.: S2/C2), no nivel de transporte AMCP.
 * Verbos padrao: `PLAY`, `LOAD` (inclui `LOADBG`), `STOP`. Opcionais (engrenagem):
   `PAUSE`, `RESUME`, `CLEAR`, `MIXER`, `CALL`, `CG`.
 * O canal de origem e trocado pelo canal de destino; a layer e preservada.
+* Comandos com identificador (`REQ <id> PLAY 1-10`, usados pelo nucleo de execucao) sao replicados
+  sem o prefixo `REQ` (`PLAY 2-10`), para a resposta do destino nao ser confundida com a da origem.
 * Os dois servidores sao independentes: se o destino cair, o comando e descartado
   (e contado) e o servidor de origem continua normalmente. Se a origem cair,
   os comandos continuam indo para o destino (`AmcpDevice::canSend()`).
