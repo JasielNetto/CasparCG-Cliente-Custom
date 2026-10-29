@@ -2,7 +2,11 @@
 
 #include "AmcpPlayoutPort.h"
 #include "DeviceManager.h"
-#include "OscClipEndWatcher.h"
+#include "OscDeviceManager.h"
+#include "OscLayerMonitor.h"
+
+#include "CasparDevice.h"
+#include "OscMonitorListener.h"
 
 #include "Resource.h"
 #include "Sequence.h"
@@ -10,7 +14,7 @@
 SequenceController::SequenceController(QObject* parent)
     : QObject(parent)
 {
-    this->port = new AmcpPlayoutPort(this);
+    this->port = new AmcpPlayoutPort([](const QString& name) { return DeviceManager::getInstance().getDeviceByName(name); }, this);
 }
 
 SequenceController::~SequenceController()
@@ -71,14 +75,16 @@ bool SequenceController::start(const QList<Clip>& newClips, bool loop, QString* 
 
     if (!this->watcher.isNull())
         delete this->watcher.data();
-    this->watcher = OscClipEndWatcher::create(endpoint, this);
-    if (this->watcher.isNull())
+    const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(first.deviceName);
+    if (device.isNull())
     {
         if (error != nullptr)
             *error = QString("Server '%1' is not configured").arg(first.deviceName);
         return false;
     }
-    QObject::connect(this->watcher.data(), &OscClipEndWatcher::clipEnded, this, &SequenceController::clipEnded);
+    this->watcher = new OscLayerMonitor(endpoint, device->resolveIpAddress(),
+                                        OscDeviceManager::getInstance().getOscMonitorListener().data(), this);
+    QObject::connect(this->watcher.data(), &OscLayerMonitor::clipEnded, this, &SequenceController::clipEnded);
 
     this->clips = newClips;
     this->loopMode = loop;

@@ -351,6 +351,9 @@ static void amcpFormataComandos()
     CHECK(amcp::loadBg(vt, looped) == "LOADBG 1-10 \"vinheta\" LOOP");
     CHECK(amcp::play(vt) == "PLAY 1-10");
     CHECK(amcp::stop({ "S2", 2, 30 }) == "STOP 2-30");
+    CHECK(amcp::pause(vt) == "PAUSE 1-10");
+    CHECK(amcp::resume(vt) == "RESUME 1-10");
+    CHECK(amcp::clear(vt) == "CLEAR 1-10");
     CHECK(amcp::request("e1", "PLAY 1-10") == "REQ e1 PLAY 1-10");
     CHECK(amcp::quote("a \"b\" c\\d") == "\"a \\\"b\\\" c\\\\d\"");
     CHECK(amcp::quote("not\xC3\xAD" "cias") == "\"not\xC3\xAD" "cias\"");

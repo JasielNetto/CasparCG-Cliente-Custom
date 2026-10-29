@@ -21,6 +21,9 @@ namespace engine::amcp
     std::string loadBg(const Endpoint& endpoint, const Item& item);  // LOADBG 1-10 "clip" [LOOP]
     std::string play(const Endpoint& endpoint);                      // PLAY 1-10
     std::string stop(const Endpoint& endpoint);                      // STOP 1-10
+    std::string pause(const Endpoint& endpoint);                     // PAUSE 1-10
+    std::string resume(const Endpoint& endpoint);                    // RESUME 1-10
+    std::string clear(const Endpoint& endpoint);                     // CLEAR 1-10
 
     std::string request(std::string_view id, std::string_view command);  // REQ <id> <comando>
 

@@ -42,6 +42,21 @@ namespace engine::amcp
         return "STOP " + address(endpoint);
     }
 
+    std::string pause(const Endpoint& endpoint)
+    {
+        return "PAUSE " + address(endpoint);
+    }
+
+    std::string resume(const Endpoint& endpoint)
+    {
+        return "RESUME " + address(endpoint);
+    }
+
+    std::string clear(const Endpoint& endpoint)
+    {
+        return "CLEAR " + address(endpoint);
+    }
+
     std::string request(std::string_view id, std::string_view command)
     {
         std::string out = "REQ ";

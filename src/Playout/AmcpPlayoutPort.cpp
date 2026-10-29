@@ -1,7 +1,5 @@
 #include "AmcpPlayoutPort.h"
 
-#include "DeviceManager.h"
-
 #include "AmcpFormat.h"
 #include "CasparDevice.h"
 
@@ -20,8 +18,8 @@ namespace
     }
 }
 
-AmcpPlayoutPort::AmcpPlayoutPort(QObject* parent)
-    : QObject(parent)
+AmcpPlayoutPort::AmcpPlayoutPort(DeviceResolver resolver, QObject* parent)
+    : QObject(parent), resolver(std::move(resolver))
 {
 }
 
@@ -57,10 +55,19 @@ void AmcpPlayoutPort::stop(const engine::Endpoint& endpoint, engine::Completion 
     send(endpoint, QString::fromStdString(engine::amcp::stop(endpoint)), std::move(done));
 }
 
+void AmcpPlayoutPort::sendCommand(const QString& server, const QString& command, engine::Completion done)
+{
+    send(server, command, std::move(done));
+}
+
 void AmcpPlayoutPort::send(const engine::Endpoint& endpoint, const QString& command, engine::Completion done)
 {
-    const QString server = QString::fromStdString(endpoint.server);
-    const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(server);
+    send(QString::fromStdString(endpoint.server), command, std::move(done));
+}
+
+void AmcpPlayoutPort::send(const QString& server, const QString& command, engine::Completion done)
+{
+    const QSharedPointer<CasparDevice> device = this->resolver ? this->resolver(server) : QSharedPointer<CasparDevice>();
     if (device.isNull())
     {
         done(failure(QString("Server '%1' is not configured").arg(server)));

@@ -1,7 +1,7 @@
 #pragma once
 
 // Controlador minimo de Sequencia: liga o nucleo (engine::SequenceRunner) ao CasparCG real
-// (AmcpPlayoutPort) e ao fim de clipe via OSC (OscClipEndWatcher).
+// (AmcpPlayoutPort) e ao fim de clipe via OSC (OscLayerMonitor).
 //
 // Versao 1 (validacao com servidor): todos os clipes de uma sequencia precisam estar no mesmo
 // servidor/canal/layer, que vira o recurso VT. Transicoes, seek/length e atrasos dos itens do rundown
@@ -24,7 +24,7 @@ namespace engine
 }
 
 class AmcpPlayoutPort;
-class OscClipEndWatcher;
+class OscLayerMonitor;
 
 class CORE_EXPORT SequenceController : public QObject
 {
@@ -56,7 +56,7 @@ class CORE_EXPORT SequenceController : public QObject
 
     private:
         AmcpPlayoutPort* port = nullptr;
-        QPointer<OscClipEndWatcher> watcher;
+        QPointer<OscLayerMonitor> watcher;
         std::unique_ptr<engine::ResourceMap> resources;
         std::unique_ptr<engine::SequenceRunner> runner;
         QList<Clip> clips;
