@@ -38,4 +38,5 @@ target_link_libraries(caspar PUBLIC
 
     Qt::Core
     Qt::Network
+    Qt::Core5Compat  # QTextCodec/QTextDecoder em AmcpDevice
 )
