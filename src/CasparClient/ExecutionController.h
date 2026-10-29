@@ -45,7 +45,12 @@ class ExecutionController : public QObject
         void fire(engine::NodeId id);
         void stop(engine::NodeId id);
 
-        // Transporte do recurso (painéis VT / Selo 1 / Selo 2).
+        // Transporte sobre o nó selecionado no Rundown (barra do Rundown).
+        void playNode(engine::NodeId id);   // retoma se estiver pausado; senão dispara
+        void pauseNode(engine::NodeId id);
+        void clearNode(engine::NodeId id);
+
+        // Transporte do recurso.
         void play(engine::LogicalResource resource);
         void pause(engine::LogicalResource resource);
         void stopResource(engine::LogicalResource resource);
@@ -100,6 +105,7 @@ class ExecutionController : public QObject
         engine::NodeId sequenceOwning(engine::LogicalResource resource) const;
         bool isActive(const RunningSequence& running) const;
         void sequenceEvent(engine::NodeId sequenceId, const engine::SequenceEvent& event);
+        QList<engine::LogicalResource> onAirResourcesOf(engine::NodeId id) const;
         void sendTransport(engine::LogicalResource resource, const std::string& command, const QString& label,
                            std::function<void()> onSuccess = {});
 

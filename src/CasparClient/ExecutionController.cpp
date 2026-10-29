@@ -599,6 +599,76 @@ void ExecutionController::stop(engine::NodeId id)
         emit message(tr("\"%1\" não está no ar").arg(labelOf(id)), false);
 }
 
+QList<engine::LogicalResource> ExecutionController::onAirResourcesOf(engine::NodeId id) const
+{
+    QList<engine::LogicalResource> result;
+    for (engine::NodeId itemId : this->model->rundown().itemsOf(id))
+    {
+        const engine::LogicalResource resource = this->model->rundown().find(itemId)->item.resource;
+        if (this->onAirByResource.value(resource, engine::RootId) == itemId && !result.contains(resource))
+            result << resource;
+    }
+    return result;
+}
+
+void ExecutionController::playNode(engine::NodeId id)
+{
+    if (this->model->rundown().find(id) == nullptr)
+        return;
+
+    // No ar e pausado: retoma (não reinicia o clipe).
+    bool resumed = false;
+    for (engine::LogicalResource resource : onAirResourcesOf(id))
+    {
+        OscLayerMonitor* layer = monitor(resource);
+        const std::optional<engine::Endpoint> endpoint = this->station.resources.find(resource);
+        if (layer != nullptr && layer->isPaused() && endpoint)
+        {
+            sendTransport(resource, engine::amcp::resume(*endpoint), tr("Retomar"));
+            resumed = true;
+        }
+    }
+    if (!resumed)
+        fire(id);
+}
+
+void ExecutionController::pauseNode(engine::NodeId id)
+{
+    const QList<engine::LogicalResource> resources = onAirResourcesOf(id);
+    if (resources.isEmpty())
+    {
+        emit message(tr("\"%1\" não está no ar").arg(labelOf(id)), false);
+        return;
+    }
+    for (engine::LogicalResource resource : resources)
+        pause(resource);
+}
+
+void ExecutionController::clearNode(engine::NodeId id)
+{
+    // Só limpa layers cujo conteúdo (no ar ou preparado) é do selecionado, ou da Sequência selecionada.
+    QList<engine::LogicalResource> targets = onAirResourcesOf(id);
+    for (engine::NodeId itemId : this->model->rundown().itemsOf(id))
+    {
+        const engine::LogicalResource resource = this->model->rundown().find(itemId)->item.resource;
+        if (this->preparedByResource.value(resource, engine::RootId) == itemId && !targets.contains(resource))
+            targets << resource;
+    }
+    auto running = this->sequences.find(id);
+    if (running != this->sequences.end() && isActive(running->second))
+        for (const engine::Item& item : running->second.runner->definition().items)
+            if (!targets.contains(item.resource))
+                targets << item.resource;
+
+    if (targets.isEmpty())
+    {
+        emit message(tr("\"%1\" não está no ar nem preparado").arg(labelOf(id)), false);
+        return;
+    }
+    for (engine::LogicalResource resource : targets)
+        clearResource(resource);
+}
+
 void ExecutionController::sendTransport(engine::LogicalResource resource, const std::string& command, const QString& label,
                                         std::function<void()> onSuccess)
 {

@@ -1,7 +1,7 @@
 #pragma once
 
 // Painel de um recurso (VT, Selo 1 ou Selo 2): destino configurado, conexão, o que está no ar e
-// tempo decorrido / restante. O transporte (Play, Pause, Stop, Clear) fica no menu do botão direito.
+// tempo decorrido / restante. Só acompanhamento: o transporte fica na barra do Rundown.
 
 #include "Resource.h"
 #include "Rundown.h"

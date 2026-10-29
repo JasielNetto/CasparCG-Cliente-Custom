@@ -8,7 +8,6 @@
 #include "TimeFormat.h"
 
 #include <QtCore/QList>
-#include <QtGui/QAction>
 #include <QtGui/QFont>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
@@ -55,15 +54,6 @@ ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionControll
     this->progress->setTextVisible(false);
     this->progress->setMaximumHeight(8);
 
-    // Transporte fora da tela: só no clique com o botão direito sobre o painel.
-    QAction* play = new QAction(tr("Play (retoma a pausa ou dispara o preparado)"), this);
-    QAction* pause = new QAction(tr("Pause"), this);
-    QAction* stop = new QAction(tr("Stop"), this);
-    QAction* clear = new QAction(tr("Clear"), this);
-    addActions({ play, pause, stop, clear });
-    setContextMenuPolicy(Qt::ActionsContextMenu);
-    setToolTip(tr("Botão direito: Play, Pause, Stop e Clear de %1").arg(QString::fromUtf8(engine::toString(resource))));
-
     QHBoxLayout* header = new QHBoxLayout();
     header->addWidget(this->title);
     header->addStretch();
@@ -83,10 +73,6 @@ ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionControll
     layout->addLayout(times);
     layout->addWidget(this->progress);
 
-    QObject::connect(play, &QAction::triggered, this, [this]() { this->execution->play(this->target); });
-    QObject::connect(pause, &QAction::triggered, this, [this]() { this->execution->pause(this->target); });
-    QObject::connect(stop, &QAction::triggered, this, [this]() { this->execution->stopResource(this->target); });
-    QObject::connect(clear, &QAction::triggered, this, [this]() { this->execution->clearResource(this->target); });
 
     QObject::connect(execution, &ExecutionController::monitorsChanged, this, [this]() {
         attachMonitor();

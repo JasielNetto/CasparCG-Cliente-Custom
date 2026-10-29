@@ -52,16 +52,20 @@ RundownWidget::RundownWidget(RundownModel* model, ExecutionController* execution
     this->repeatAction->setCheckable(true);
     QAction* remove = makeAction(tr("Remover"), QKeySequence(QKeySequence::Delete), Qt::WidgetWithChildrenShortcut);
 
-    // Playout (valem na janela toda).
+    // Playout sobre o selecionado (valem na janela toda).
     QAction* prepare = makeAction(tr("Preparar"), QKeySequence(Qt::Key_F7), Qt::WindowShortcut);
-    QAction* fire = makeAction(tr("Disparar"), QKeySequence(Qt::Key_F8), Qt::WindowShortcut);
-    QAction* stop = makeAction(tr("Parar"), QKeySequence(Qt::Key_F9), Qt::WindowShortcut);
+    QAction* play = makeAction(tr("Play"), QKeySequence(Qt::Key_F8), Qt::WindowShortcut);
+    QAction* pause = makeAction(tr("Pause"), QKeySequence(Qt::Key_F10), Qt::WindowShortcut);
+    QAction* stop = makeAction(tr("Stop"), QKeySequence(Qt::Key_F9), Qt::WindowShortcut);
+    QAction* clear = makeAction(tr("Clear"), QKeySequence(Qt::Key_F11), Qt::WindowShortcut);
     // Tecla segurada não pode repetir: cada repetição seria um novo disparo no ar.
-    for (QAction* action : { prepare, fire, stop })
+    for (QAction* action : { prepare, play, pause, stop, clear })
         action->setAutoRepeat(false);
     prepare->setToolTip(tr("Carrega em background (LOADBG) sem colocar no ar — F7"));
-    fire->setToolTip(tr("Coloca no ar o item, Conjunto ou Sequência selecionado — F8"));
+    play->setToolTip(tr("Coloca no ar o selecionado; se estiver pausado, retoma — F8"));
+    pause->setToolTip(tr("Pausa o selecionado que está no ar — F10"));
     stop->setToolTip(tr("Tira do ar o selecionado — F9"));
+    clear->setToolTip(tr("Limpa os layers do selecionado (no ar e preparado) — F11"));
 
     QAction* separatorA = new QAction(this);
     separatorA->setSeparator(true);
@@ -71,7 +75,7 @@ RundownWidget::RundownWidget(RundownModel* model, ExecutionController* execution
     separatorC->setSeparator(true);
 
     this->editing = { addBloco, addSequencia, addConjunto, separatorA, toVt, toSelo1, toSelo2, separatorB, this->repeatAction, remove };
-    this->playout = { prepare, fire, stop };
+    this->playout = { prepare, play, pause, stop, clear };
 
     this->view->addActions(this->playout);
     this->view->addAction(separatorC);
@@ -108,14 +112,22 @@ RundownWidget::RundownWidget(RundownModel* model, ExecutionController* execution
         for (engine::NodeId id : selectedIds())
             this->execution->prepare(id);
     });
-    QObject::connect(fire, &QAction::triggered, this, [this]() {
-        const engine::NodeId id = currentId();
+    QObject::connect(play, &QAction::triggered, this, [this]() {
+        const engine::NodeId id = currentId();  // um só: Play em vários itens poria tudo no ar ao mesmo tempo
         if (id != engine::RootId)
-            this->execution->fire(id);
+            this->execution->playNode(id);
+    });
+    QObject::connect(pause, &QAction::triggered, this, [this]() {
+        for (engine::NodeId id : selectedIds())
+            this->execution->pauseNode(id);
     });
     QObject::connect(stop, &QAction::triggered, this, [this]() {
         for (engine::NodeId id : selectedIds())
             this->execution->stop(id);
+    });
+    QObject::connect(clear, &QAction::triggered, this, [this]() {
+        for (engine::NodeId id : selectedIds())
+            this->execution->clearNode(id);
     });
 
     QObject::connect(this->view->selectionModel(), &QItemSelectionModel::selectionChanged, this, [this]() { updateActions(); });

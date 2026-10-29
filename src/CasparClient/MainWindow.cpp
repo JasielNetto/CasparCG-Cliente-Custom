@@ -123,7 +123,7 @@ void MainWindow::buildMenus()
     add(help, tr("&Sobre"), QKeySequence(), [this]() {
         QMessageBox::about(this, tr("CasparClient"),
                            tr("<b>CasparClient</b><br>Cliente de playout para CasparCG Server 2.4.<br><br>"
-                              "F7 prepara · F8 dispara · F9 para<br>"
+                              "F7 prepara · F8 Play · F9 Stop · F10 Pause · F11 Clear<br>"
                               "Ctrl+1 Bloco · Ctrl+2 Sequência · Ctrl+3 Conjunto<br>"
                               "Alt+1 VT · Alt+2 Selo 1 · Alt+3 Selo 2 · Ctrl+L loop da Sequência"));
     });
