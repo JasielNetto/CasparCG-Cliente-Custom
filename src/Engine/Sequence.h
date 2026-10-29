@@ -89,7 +89,7 @@ namespace engine
         void takePrepared(int target);
         void preloadNext();
         void fail(const std::string& error);
-        void emit(const std::string& error = {});
+        void publish(const std::string& error = {});
         Endpoint endpointOf(int i) const;
 
         Sequence sequence;

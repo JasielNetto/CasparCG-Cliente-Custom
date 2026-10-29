@@ -7,7 +7,7 @@ option(ENGINE_SANITIZERS "Compila com AddressSanitizer/UBSan (GCC/Clang)" ON)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../src/Engine ${CMAKE_CURRENT_BINARY_DIR}/engine)
 
-add_executable(engine_test engine_test.cpp)
+add_executable(engine_test engine_test.cpp qt_keywords_check.cpp)
 target_link_libraries(engine_test PRIVATE engine)
 
 if (NOT MSVC)

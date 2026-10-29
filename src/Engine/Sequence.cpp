@@ -60,7 +60,7 @@ namespace engine
         preload = Preload::None;
         takeWhenReady = false;
         advancing = false;
-        emit();
+        publish();
         goTo(0);
         return true;
     }
@@ -73,7 +73,7 @@ namespace engine
         if (index >= 0)
             port.stop(endpointOf(index), [](const CommandResult&) {});
         currentState = SequenceState::Stopped;
-        emit();
+        publish();
     }
 
     void SequenceRunner::interrupt()
@@ -82,7 +82,7 @@ namespace engine
             return;
         ++generation;
         currentState = SequenceState::Interrupted;
-        emit();
+        publish();
     }
 
     void SequenceRunner::onItemFinished(const std::string& itemId)
@@ -97,7 +97,7 @@ namespace engine
         {
             ++generation;
             currentState = SequenceState::Finished;
-            emit();
+            publish();
             return;
         }
         goTo(next);
@@ -156,7 +156,7 @@ namespace engine
             index = target;
             advancing = false;
             currentState = SequenceState::Running;
-            emit();
+            publish();
             preloadNext();
         });
     }
@@ -194,10 +194,10 @@ namespace engine
         ++generation;
         advancing = false;
         currentState = SequenceState::Error;
-        emit(error);
+        publish(error);
     }
 
-    void SequenceRunner::emit(const std::string& error)
+    void SequenceRunner::publish(const std::string& error)
     {
         if (!listener)
             return;
