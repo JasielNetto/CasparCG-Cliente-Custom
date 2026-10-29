@@ -144,7 +144,7 @@ void ExecutionController::prepare(engine::NodeId id)
                 prepareItem(child);
             break;
         case engine::NodeKind::Sequencia:
-            emit message(tr("A Sequência prepara os próprios itens ao ser disparada (F8)"), false);
+            emit message(tr("A Sequência prepara os próprios itens ao ser disparada (F2)"), false);
             break;
         case engine::NodeKind::Bloco:
             emit message(tr("Bloco só organiza o rundown; selecione um item, Sequência ou Conjunto"), true);
@@ -172,7 +172,7 @@ void ExecutionController::prepareItem(engine::NodeId id)
     const engine::NodeId owner = sequenceOwning(resource);
     if (owner != engine::RootId)
     {
-        emit message(tr("%1 está em uso pela Sequência \"%2\". Pare a Sequência (F9) ou dispare o item direto (F8).")
+        emit message(tr("%1 está em uso pela Sequência \"%2\". Pare a Sequência (F1) ou dispare o item direto (F2).")
                          .arg(resourceName(resource), labelOf(owner)), true);
         return;
     }
@@ -265,7 +265,7 @@ void ExecutionController::takePrepared(engine::NodeId id, engine::LogicalResourc
     if (sequenceOwning(resource) != engine::RootId)
     {
         clearPrepared(resource);
-        emit message(tr("%1 está em uso por uma Sequência; dispare o item direto (F8)").arg(resourceName(resource)), true);
+        emit message(tr("%1 está em uso por uma Sequência; dispare o item direto (F2)").arg(resourceName(resource)), true);
         return;
     }
 
@@ -278,7 +278,7 @@ void ExecutionController::takePrepared(engine::NodeId id, engine::LogicalResourc
         return;
     }
 
-    // Sai de "preparado" já no envio: um segundo F8 não manda outro PLAY.
+    // Sai de "preparado" já no envio: um segundo F2 não manda outro PLAY.
     this->preparedByResource.remove(resource);
     this->model->setState(id, engine::NodeState::Preparing);
 
@@ -716,7 +716,7 @@ void ExecutionController::play(engine::LogicalResource resource)
     }
 
     // Sem pausa e sem preparo deste cliente: um PLAY puro colocaria no ar o que estiver no background.
-    emit message(tr("Nada preparado em %1. Prepare um item (F7) ou dispare direto (F8).").arg(resourceName(resource)), true);
+    emit message(tr("Nada preparado em %1. Prepare um item (F3) ou dispare direto (F2).").arg(resourceName(resource)), true);
 }
 
 void ExecutionController::pause(engine::LogicalResource resource)

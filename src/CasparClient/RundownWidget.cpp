@@ -53,18 +53,18 @@ RundownWidget::RundownWidget(RundownModel* model, ExecutionController* execution
     QAction* remove = makeAction(tr("Remover"), QKeySequence(QKeySequence::Delete), Qt::WidgetWithChildrenShortcut);
 
     // Playout sobre o selecionado (valem na janela toda).
-    QAction* prepare = makeAction(tr("Preparar"), QKeySequence(Qt::Key_F7), Qt::WindowShortcut);
-    QAction* play = makeAction(tr("Play"), QKeySequence(Qt::Key_F8), Qt::WindowShortcut);
-    QAction* pause = makeAction(tr("Pause"), QKeySequence(Qt::Key_F10), Qt::WindowShortcut);
-    QAction* stop = makeAction(tr("Stop"), QKeySequence(Qt::Key_F9), Qt::WindowShortcut);
+    QAction* prepare = makeAction(tr("Preparar"), QKeySequence(Qt::Key_F3), Qt::WindowShortcut);
+    QAction* play = makeAction(tr("Play"), QKeySequence(Qt::Key_F2), Qt::WindowShortcut);
+    QAction* pause = makeAction(tr("Pause"), QKeySequence(Qt::Key_F4), Qt::WindowShortcut);
+    QAction* stop = makeAction(tr("Stop"), QKeySequence(Qt::Key_F1), Qt::WindowShortcut);
     QAction* clear = makeAction(tr("Clear"), QKeySequence(Qt::Key_F11), Qt::WindowShortcut);
     // Tecla segurada não pode repetir: cada repetição seria um novo disparo no ar.
     for (QAction* action : { prepare, play, pause, stop, clear })
         action->setAutoRepeat(false);
-    prepare->setToolTip(tr("Carrega em background (LOADBG) sem colocar no ar — F7"));
-    play->setToolTip(tr("Coloca no ar o selecionado; se estiver pausado, retoma — F8"));
-    pause->setToolTip(tr("Pausa o selecionado que está no ar — F10"));
-    stop->setToolTip(tr("Tira do ar o selecionado — F9"));
+    prepare->setToolTip(tr("Carrega em background (LOADBG) sem colocar no ar — F3"));
+    play->setToolTip(tr("Coloca no ar o selecionado; se estiver pausado, retoma — F2"));
+    pause->setToolTip(tr("Pausa o selecionado que está no ar — F4"));
+    stop->setToolTip(tr("Tira do ar o selecionado — F1"));
     clear->setToolTip(tr("Limpa os layers do selecionado (no ar e preparado) — F11"));
 
     QAction* separatorA = new QAction(this);

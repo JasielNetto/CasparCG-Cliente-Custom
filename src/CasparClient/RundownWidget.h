@@ -1,8 +1,8 @@
 #pragma once
 
 // Rundown operacional (RF-03/RF-04): árvore de Blocos, Sequências, Conjuntos e itens.
-// Seleção (clique) é separada de preparar (F7) e do transporte sobre o selecionado:
-// Play (F8), Stop (F9), Pause (F10) e Clear (F11).
+// Seleção (clique) é separada de preparar (F3) e do transporte sobre o selecionado:
+// Play (F2), Stop (F1), Pause (F4) e Clear (F11), as mesmas teclas do cliente antigo.
 
 #include "Resource.h"
 #include "Rundown.h"

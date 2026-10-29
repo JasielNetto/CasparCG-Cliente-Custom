@@ -3,7 +3,7 @@
 // Execução do Rundown no CasparCG: preparar, disparar e parar Itens, Conjuntos e Sequências, e o
 // transporte dos recursos (VT, Selo 1, Selo 2). Regras (PROJECT_CONTEXT.md, D-08 e D-09):
 //   - um recurso tem no máximo um nó "no ar" e um "preparado" (LOADBG);
-//   - um recurso usado por uma Sequência em execução pertence a ela: o preparo manual (F7) nele é
+//   - um recurso usado por uma Sequência em execução pertence a ela: o preparo manual (F3) nele é
 //     recusado, porque a pré-carga da Sequência usa o mesmo background;
 //   - disparar algo num recurso de uma Sequência a interrompe, mas só depois de todas as preparações
 //     darem certo (um disparo que falha não derruba a Sequência);

@@ -72,7 +72,7 @@ nem os widgets do cliente antigo.
 - Tela: biblioteca de mídia | rundown | painéis VT, Selo 1 e Selo 2 (só acompanhamento; o transporte fica na barra do rundown).
 - Barra do rundown: Preparar, Play, Pause, Stop e Clear sobre o selecionado. Play retoma se o selecionado
   estiver pausado no ar; senão dispara (só take, se preparado). Clear só limpa layers do selecionado.
-- Atalhos: F7 Preparar, F8 Play, F9 Stop, F10 Pause, F11 Clear; Ctrl+1/2/3 Bloco/Sequência/Conjunto; Alt+1/2/3 recurso; Ctrl+L loop.
+- Atalhos: mesmas teclas do cliente antigo: F3 Preparar (Load), F2 Play, F1 Stop, F4 Pause, F11 Clear (videolayer); Ctrl+1/2/3 Bloco/Sequência/Conjunto; Alt+1/2/3 recurso; Ctrl+L loop.
 - Porta OSC configurável (padrão 6250). Cliente antigo e novo no mesmo PC disputariam a mesma porta UDP.
 
 Regras de execução (`ExecutionController`):
@@ -83,8 +83,8 @@ Regras de execução (`ExecutionController`):
 - Bloco não executa.
 
 ### D-09 — Regras de segurança da execução, após revisão independente (2026-10-29)
-- **Recurso de Sequência em execução é dela.** O preparo manual (F7) nesse recurso é recusado com aviso,
-  porque a pré-carga da Sequência usa o mesmo background; disparar direto (F8) continua possível.
+- **Recurso de Sequência em execução é dela.** O preparo manual (F3) nesse recurso é recusado com aviso,
+  porque a pré-carga da Sequência usa o mesmo background; disparar direto (F2) continua possível.
   Iniciar uma Sequência descarta o que estava preparado nos recursos dela.
 - **Interrupção só depois do sucesso da preparação.** `engine::fire` chama `beforeTake` quando todas as
   preparações deram certo; é ali que a Sequência do recurso é interrompida. Disparo bloqueado ou abortado
@@ -99,7 +99,7 @@ Regras de execução (`ExecutionController`):
   é interrompida. Queda de servidor descarta o que estava preparado nele.
 - Stop/Clear só liberam o recurso na tela quando o servidor confirma.
 - Tempo limite padrão do AMCP: 5 s. Porta OSC que não abre é avisada na barra de status e nos painéis.
-- F7/F8/F9 sem repetição por tecla segurada.
+- F1/F2/F3 sem repetição por tecla segurada.
 
 ## Estrutura do núcleo (`src/Engine`)
 - `Resource.h` — recursos lógicos (VT, Selo 1, Selo 2) e `ResourceMap` (recurso → servidor/canal/layer).
