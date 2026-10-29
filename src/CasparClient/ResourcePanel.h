@@ -1,7 +1,7 @@
 #pragma once
 
-// Painel de um recurso (VT, Selo 1 ou Selo 2): destino configurado, conexão, o que está no ar,
-// tempo decorrido / restante e transporte (Play, Pause, Stop, Clear).
+// Painel de um recurso (VT, Selo 1 ou Selo 2): destino configurado, conexão, o que está no ar e
+// tempo decorrido / restante. O transporte (Play, Pause, Stop, Clear) fica no menu do botão direito.
 
 #include "Resource.h"
 #include "Rundown.h"
@@ -13,7 +13,6 @@ class ConnectionManager;
 class ExecutionController;
 class QLabel;
 class QProgressBar;
-class QPushButton;
 class RundownModel;
 
 class ResourcePanel : public QFrame

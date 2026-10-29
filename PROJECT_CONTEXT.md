@@ -69,7 +69,7 @@ nem os widgets do cliente antigo.
 - Configuração própria em `station.json` (pasta de configuração do usuário: `QStandardPaths::AppConfigLocation`).
 - Rundown salvo em `.ccrundown` (JSON); estados operacionais não são salvos.
 - Interface em português; tema escuro (Fusion).
-- Tela: biblioteca de mídia | rundown | painéis VT, Selo 1 e Selo 2.
+- Tela: biblioteca de mídia | rundown | painéis VT, Selo 1 e Selo 2 (só acompanhamento; Play/Pause/Stop/Clear no botão direito).
 - Atalhos: F7 prepara, F8 dispara, F9 para; Ctrl+1/2/3 Bloco/Sequência/Conjunto; Alt+1/2/3 recurso; Ctrl+L loop.
 - Porta OSC configurável (padrão 6250). Cliente antigo e novo no mesmo PC disputariam a mesma porta UDP.
 

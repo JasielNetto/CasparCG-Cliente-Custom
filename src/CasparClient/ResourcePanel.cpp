@@ -8,12 +8,12 @@
 #include "TimeFormat.h"
 
 #include <QtCore/QList>
+#include <QtGui/QAction>
 #include <QtGui/QFont>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QHBoxLayout>
 #include <QtWidgets/QLabel>
 #include <QtWidgets/QProgressBar>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QVBoxLayout>
 
 ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionController* execution, ConnectionManager* connections,
@@ -55,11 +55,14 @@ ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionControll
     this->progress->setTextVisible(false);
     this->progress->setMaximumHeight(8);
 
-    QPushButton* play = new QPushButton(tr("Play"), this);
-    QPushButton* pause = new QPushButton(tr("Pause"), this);
-    QPushButton* stop = new QPushButton(tr("Stop"), this);
-    QPushButton* clear = new QPushButton(tr("Clear"), this);
-    play->setToolTip(tr("Retoma se estiver pausado; senão coloca no ar o que estiver preparado"));
+    // Transporte fora da tela: só no clique com o botão direito sobre o painel.
+    QAction* play = new QAction(tr("Play (retoma a pausa ou dispara o preparado)"), this);
+    QAction* pause = new QAction(tr("Pause"), this);
+    QAction* stop = new QAction(tr("Stop"), this);
+    QAction* clear = new QAction(tr("Clear"), this);
+    addActions({ play, pause, stop, clear });
+    setContextMenuPolicy(Qt::ActionsContextMenu);
+    setToolTip(tr("Botão direito: Play, Pause, Stop e Clear de %1").arg(QString::fromUtf8(engine::toString(resource))));
 
     QHBoxLayout* header = new QHBoxLayout();
     header->addWidget(this->title);
@@ -72,12 +75,6 @@ ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionControll
     times->addStretch();
     times->addWidget(this->remaining);
 
-    QHBoxLayout* transport = new QHBoxLayout();
-    transport->addWidget(play);
-    transport->addWidget(pause);
-    transport->addWidget(stop);
-    transport->addWidget(clear);
-
     QVBoxLayout* layout = new QVBoxLayout(this);
     layout->addLayout(header);
     layout->addWidget(this->destination);
@@ -85,12 +82,11 @@ ResourcePanel::ResourcePanel(engine::LogicalResource resource, ExecutionControll
     layout->addWidget(this->clip);
     layout->addLayout(times);
     layout->addWidget(this->progress);
-    layout->addLayout(transport);
 
-    QObject::connect(play, &QPushButton::clicked, this, [this]() { this->execution->play(this->target); });
-    QObject::connect(pause, &QPushButton::clicked, this, [this]() { this->execution->pause(this->target); });
-    QObject::connect(stop, &QPushButton::clicked, this, [this]() { this->execution->stopResource(this->target); });
-    QObject::connect(clear, &QPushButton::clicked, this, [this]() { this->execution->clearResource(this->target); });
+    QObject::connect(play, &QAction::triggered, this, [this]() { this->execution->play(this->target); });
+    QObject::connect(pause, &QAction::triggered, this, [this]() { this->execution->pause(this->target); });
+    QObject::connect(stop, &QAction::triggered, this, [this]() { this->execution->stopResource(this->target); });
+    QObject::connect(clear, &QAction::triggered, this, [this]() { this->execution->clearResource(this->target); });
 
     QObject::connect(execution, &ExecutionController::monitorsChanged, this, [this]() {
         attachMonitor();
