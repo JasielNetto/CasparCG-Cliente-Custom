@@ -41,6 +41,7 @@ namespace engine
         void set(LogicalResource resource, const Endpoint& endpoint);
         void remove(LogicalResource resource);
         std::optional<Endpoint> find(LogicalResource resource) const;
+        const std::map<LogicalResource, Endpoint>& all() const { return endpoints; }
 
     private:
         std::map<LogicalResource, Endpoint> endpoints;

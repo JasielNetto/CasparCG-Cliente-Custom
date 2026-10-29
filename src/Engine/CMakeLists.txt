@@ -10,7 +10,10 @@ add_library(engine STATIC
     Item.h
     PlayoutPort.h
     Resource.cpp Resource.h
+    Rundown.cpp Rundown.h
     Sequence.cpp Sequence.h
+    StationConfig.cpp StationConfig.h
+    TimeFormat.h
 )
 target_include_directories(engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_features(engine PUBLIC cxx_std_17)
