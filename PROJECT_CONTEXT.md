@@ -49,6 +49,19 @@ Clipes sem duração (streams) nunca disparam. Não reiniciar o detector a cada 
 clipe anterior pareceria o fim do novo). O avanço pelo cliente gera um pequeno intervalo entre clipes;
 para corte no quadro exato, a evolução é `LOADBG ... AUTO`.
 
+### D-07 — Sequência mínima no rundown (2026-10-29)
+Primeira ligação visível do núcleo, para validar contra o servidor 2.4.3. No menu de contexto do rundown:
+**Run Selection as Sequence**, **Run Selection as Sequence (Loop)** e **Stop Sequence**. Usa os itens de
+vídeo selecionados, na ordem visual (grupo selecionado inclui seus itens). Regras da versão 1:
+- todos no mesmo servidor/canal/layer (vira o recurso VT);
+- item com Loop ligado é recusado (nunca terminaria);
+- transição, seek/length e atrasos dos itens ainda são ignorados;
+- uma sequência por aba de rundown; iniciar outra substitui a anterior;
+- o andamento aparece na barra de status; o estado visual dos itens no rundown não é atualizado.
+
+Implementação: `src/Core/SequenceController` (núcleo + `AmcpPlayoutPort` + `OscClipEndWatcher`).
+As ações novas ficam no fim do menu porque o restante dele é habilitado por posição.
+
 ## Estrutura do núcleo (`src/Engine`)
 - `Resource.h` — recursos lógicos (VT, Selo 1, Selo 2) e `ResourceMap` (recurso → servidor/canal/layer).
 - `Item.h` — item executável.
@@ -62,6 +75,7 @@ para corte no quadro exato, a evolução é `LOADBG ... AUTO`.
 - `src/Core/AmcpPlayoutPort` — implementa `engine::PlayoutPort` sobre os `CasparDevice` do `DeviceManager`.
 - `src/Core/OscClipEndWatcher` — emite `clipEnded()` por destino; alimenta `SequenceRunner::onItemFinished`.
 - `src/Caspar/AmcpDevice` — `sendRequest()` e sinal `requestCompleted()`.
+- `src/Core/SequenceController` — Sequência mínima a partir de clipes do rundown (D-07).
 
 ## Testes
 Sem Qt e sem servidor real, com playout simulado (`tools/tests/engine/FakePlayoutPort.h`):
@@ -73,12 +87,11 @@ Sem Qt e sem servidor real, com playout simulado (`tools/tests/engine/FakePlayou
 Em GCC/Clang compila com `-Werror` e ASan/UBSan (desligue com `-DENGINE_SANITIZERS=OFF`).
 
 ## Pendências e hipóteses
-- O núcleo está no build principal, mas nenhum widget ou tela o usa ainda.
+- Só a Sequência mínima (D-07) usa o núcleo; Conjunto ainda não tem acesso pela interface.
 - Rollback em falha parcial de Conjunto: não implementado; decidir com a operação.
 - Precedência entre execuções: hipótese adotada é que a execução nova assume o recurso e a anterior
   recebe `interrupt()`. O árbitro de recursos ainda não existe.
 - Sincronismo entre recursos em canais diferentes não é garantido pelo take em rajada.
-- Falta o controlador que liga `OscClipEndWatcher` ao `SequenceRunner` (e a tela que cria Sequências).
 - O código Qt novo é validado pelo CI (Windows/Linux/macOS); ainda não foi testado contra servidor real.
 - Lote atômico (`BEGIN`/`COMMIT`) para o Conjunto: não confirmado para a 2.4.3; validar antes de usar.
 - Itens com `loop = true` dentro de Sequência não terminam e travam o avanço; validar regra.

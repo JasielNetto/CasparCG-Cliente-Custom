@@ -63,12 +63,12 @@ void AmcpPlayoutPort::send(const engine::Endpoint& endpoint, const QString& comm
     const QSharedPointer<CasparDevice> device = DeviceManager::getInstance().getDeviceByName(server);
     if (device.isNull())
     {
-        done(failure(QString("Servidor '%1' nao cadastrado").arg(server)));
+        done(failure(QString("Server '%1' is not configured").arg(server)));
         return;
     }
     if (!device->isConnected())
     {
-        done(failure(QString("Servidor '%1' desconectado").arg(server)));
+        done(failure(QString("Server '%1' is disconnected").arg(server)));
         return;
     }
 
@@ -79,14 +79,14 @@ void AmcpPlayoutPort::send(const engine::Endpoint& endpoint, const QString& comm
     QTimer* timer = new QTimer(this);
     timer->setSingleShot(true);
     QObject::connect(timer, &QTimer::timeout, this, [this, id, server]() {
-        complete(id, failure(QString("Sem resposta de '%1' em %2 ms").arg(server).arg(this->timeoutMs)));
+        complete(id, failure(QString("No response from '%1' within %2 ms").arg(server).arg(this->timeoutMs)));
     });
 
     this->pending.insert(id, Pending { std::move(done), QPointer<CasparDevice>(device.data()), timer });
 
     if (!device->sendRequest(id, command))
     {
-        complete(id, failure(QString("Servidor '%1' recusou o envio").arg(server)));
+        complete(id, failure(QString("Server '%1' refused the command").arg(server)));
         return;
     }
     timer->start(this->timeoutMs);
@@ -102,7 +102,7 @@ void AmcpPlayoutPort::watch(CasparDevice* device)
     QObject::connect(device, &CasparDevice::connectionStateChanged, this, &AmcpPlayoutPort::connectionStateChanged);
     QObject::connect(device, &QObject::destroyed, this, [this, device]() {
         this->watched.remove(device);
-        failAllFor(device, "Servidor removido");
+        failAllFor(device, "Server removed");
     });
 }
 
@@ -155,11 +155,11 @@ void AmcpPlayoutPort::requestCompleted(const QString& id, int code, const QList<
     }
 
     const QString detail = response.isEmpty() ? QString::number(code) : response.join(" | ").trimmed();
-    complete(id, failure(QString("Servidor respondeu %1").arg(detail)));
+    complete(id, failure(QString("Server replied %1").arg(detail)));
 }
 
 void AmcpPlayoutPort::connectionStateChanged(CasparDevice& device)
 {
     if (!device.isConnected())
-        failAllFor(&device, "Conexao com o servidor perdida");
+        failAllFor(&device, "Connection to the server was lost");
 }

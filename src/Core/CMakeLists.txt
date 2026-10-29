@@ -152,6 +152,7 @@ qt_add_library(core
     OscDeviceManager.cpp OscDeviceManager.h
     OscSubscription.cpp OscSubscription.h
     OscWebSocketManager.cpp OscWebSocketManager.h
+    SequenceController.cpp SequenceController.h
     Shared.h
     ThumbnailWorker.cpp ThumbnailWorker.h
 )
