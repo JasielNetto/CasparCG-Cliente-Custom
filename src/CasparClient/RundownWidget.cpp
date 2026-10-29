@@ -56,6 +56,9 @@ RundownWidget::RundownWidget(RundownModel* model, ExecutionController* execution
     QAction* prepare = makeAction(tr("Preparar"), QKeySequence(Qt::Key_F7), Qt::WindowShortcut);
     QAction* fire = makeAction(tr("Disparar"), QKeySequence(Qt::Key_F8), Qt::WindowShortcut);
     QAction* stop = makeAction(tr("Parar"), QKeySequence(Qt::Key_F9), Qt::WindowShortcut);
+    // Tecla segurada não pode repetir: cada repetição seria um novo disparo no ar.
+    for (QAction* action : { prepare, fire, stop })
+        action->setAutoRepeat(false);
     prepare->setToolTip(tr("Carrega em background (LOADBG) sem colocar no ar — F7"));
     fire->setToolTip(tr("Coloca no ar o item, Conjunto ou Sequência selecionado — F8"));
     stop->setToolTip(tr("Tira do ar o selecionado — F9"));

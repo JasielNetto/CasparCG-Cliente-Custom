@@ -1,7 +1,7 @@
 #pragma once
 
 // Rundown operacional (RF-03/RF-04): árvore de Blocos, Sequências, Conjuntos e itens.
-// Seleção (clique) é separada de preparar (F7) e disparar (F8 / Enter do teclado numérico).
+// Seleção (clique) é separada de preparar (F7), disparar (F8) e parar (F9).
 
 #include "Resource.h"
 #include "Rundown.h"

@@ -63,6 +63,9 @@ class RundownModel : public QAbstractItemModel
 
         Q_SIGNAL void modifiedChanged(bool modified);
 
+        // Emitido antes de remover nós (com todos os descendentes), para quem acompanha a execução.
+        Q_SIGNAL void nodesAboutToBeRemoved(const QList<engine::NodeId>& ids);
+
     private:
         engine::Rundown model;
         bool modified = false;
@@ -73,5 +76,6 @@ class RundownModel : public QAbstractItemModel
         bool resolveAnchor(const QModelIndex& anchor, engine::NodeKind kind, engine::NodeId& targetParent, int& targetRow) const;
         bool moveNode(engine::NodeId id, engine::NodeId newParent, int row);
         QList<engine::NodeId> decodeNodes(const QMimeData* data) const;
+        QList<engine::NodeId> subtree(engine::NodeId id) const;
         QStringList decodeMedia(const QMimeData* data) const;
 };

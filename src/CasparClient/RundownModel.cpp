@@ -2,6 +2,7 @@
 
 #include <QtCore/QMimeData>
 #include <QtCore/QSet>
+#include <QtCore/QStringList>
 #include <QtGui/QBrush>
 #include <QtGui/QColor>
 #include <QtGui/QFont>
@@ -349,8 +350,36 @@ std::optional<engine::NodeId> RundownModel::addMedia(const QString& media, engin
     return id;
 }
 
+QList<engine::NodeId> RundownModel::subtree(engine::NodeId id) const
+{
+    QList<engine::NodeId> out;
+    if (this->model.find(id) == nullptr)
+        return out;
+    out << id;
+    for (engine::NodeId candidate : this->model.flatten())
+    {
+        for (engine::NodeId up = this->model.find(candidate)->parent; up != engine::RootId; up = this->model.find(up)->parent)
+        {
+            if (up == id)
+            {
+                out << candidate;
+                break;
+            }
+        }
+    }
+    return out;
+}
+
 void RundownModel::removeNodes(const QList<engine::NodeId>& ids)
 {
+    QList<engine::NodeId> affected;
+    for (engine::NodeId id : ids)
+        for (engine::NodeId node : subtree(id))
+            if (!affected.contains(node))
+                affected << node;
+    if (!affected.isEmpty())
+        emit nodesAboutToBeRemoved(affected);
+
     bool changed = false;
     for (engine::NodeId id : ids)
     {

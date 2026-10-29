@@ -31,7 +31,8 @@ class AmcpPlayoutPort : public QObject, public engine::PlayoutPort
     Q_OBJECT
 
     public:
-        static constexpr int DefaultTimeoutMs = 2000;
+        // LOADBG de arquivo grande em storage de rede pode passar de 2 s.
+        static constexpr int DefaultTimeoutMs = 5000;
 
         using DeviceResolver = std::function<QSharedPointer<CasparDevice>(const QString& name)>;
 
@@ -59,7 +60,6 @@ class AmcpPlayoutPort : public QObject, public engine::PlayoutPort
 
         DeviceResolver resolver;
         int timeoutMs = DefaultTimeoutMs;
-        quint64 nextId = 0;
         QHash<QString, Pending> pending;
         QSet<CasparDevice*> watched;
 

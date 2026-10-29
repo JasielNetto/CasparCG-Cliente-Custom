@@ -88,8 +88,11 @@ namespace engine
     };
 
     using FireCallback = std::function<void(const FireReport&)>;
+    using BeforeTake = std::function<void()>;
 
     // Dispara um Conjunto. O callback é chamado exatamente uma vez, quando todas as respostas chegarem.
     // O estado do disparo é mantido internamente, então o chamador não precisa manter nada vivo.
-    void fire(const Conjunto& conjunto, const ResourceMap& map, PlayoutPort& port, FireCallback done);
+    // 'beforeTake' (opcional) é chamado uma vez, só se todas as preparações deram certo, imediatamente
+    // antes dos takes: é o ponto para tirar o controle de quem usava os recursos (ex.: Sequência).
+    void fire(const Conjunto& conjunto, const ResourceMap& map, PlayoutPort& port, FireCallback done, BeforeTake beforeTake = {});
 }

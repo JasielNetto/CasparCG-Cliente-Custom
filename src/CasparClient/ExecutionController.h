@@ -1,31 +1,34 @@
 #pragma once
 
 // Execução do Rundown no CasparCG: preparar, disparar e parar Itens, Conjuntos e Sequências, e o
-// transporte dos recursos (VT, Selo 1, Selo 2). Mantém os estados dos nós coerentes por recurso:
+// transporte dos recursos (VT, Selo 1, Selo 2). Regras (PROJECT_CONTEXT.md, D-08 e D-09):
 //   - um recurso tem no máximo um nó "no ar" e um "preparado" (LOADBG);
-//   - disparar algo num recurso usado por uma Sequência em execução substitui a Sequência (interrupt);
-//   - o fim de clipe (OSC) avança a Sequência dona do recurso ou marca o item como concluído.
+//   - um recurso usado por uma Sequência em execução pertence a ela: o preparo manual (F7) nele é
+//     recusado, porque a pré-carga da Sequência usa o mesmo background;
+//   - disparar algo num recurso de uma Sequência a interrompe, mas só depois de todas as preparações
+//     darem certo (um disparo que falha não derruba a Sequência);
+//   - o fim de clipe (OSC) só vale se o nome do clipe confere com a mídia esperada;
+//   - Play no painel nunca envia PLAY "às cegas": retoma a pausa ou dispara o que este cliente preparou;
+//   - respostas que chegam depois de trocar de rundown ou de estação são descartadas (época).
 
 #include "Rundown.h"
 #include "StationConfig.h"
 
+#include <QtCore/QList>
 #include <QtCore/QMap>
 #include <QtCore/QObject>
 #include <QtCore/QPointer>
 #include <QtCore/QString>
 
+#include <functional>
 #include <map>
 #include <memory>
+#include <optional>
 
 class AmcpPlayoutPort;
 class ConnectionManager;
 class OscLayerMonitor;
 class RundownModel;
-
-namespace engine
-{
-    class SequenceRunner;
-}
 
 class ExecutionController : public QObject
 {
@@ -69,27 +72,38 @@ class ExecutionController : public QObject
         RundownModel* model = nullptr;
         AmcpPlayoutPort* port = nullptr;
         engine::StationConfig station;
+        quint64 epoch = 0;
 
         QMap<engine::LogicalResource, QPointer<OscLayerMonitor>> monitors;
         QMap<engine::LogicalResource, engine::NodeId> onAirByResource;
         QMap<engine::LogicalResource, engine::NodeId> preparedByResource;
         std::map<engine::NodeId, RunningSequence> sequences;
 
+        bool isCurrent(quint64 capturedEpoch) const { return capturedEpoch == this->epoch; }
+        void forgetAll();
+
         void rebuildMonitors();
+        void createMissingMonitors();
         std::optional<engine::Endpoint> endpointFor(engine::LogicalResource resource, QString* error) const;
         QString labelOf(engine::NodeId id) const;
+        static QString resourceName(engine::LogicalResource resource);
 
         void prepareItem(engine::NodeId id);
         void fireItems(engine::NodeId groupId, const engine::Conjunto& conjunto);
-        void takePrepared(engine::NodeId id);
+        void takePrepared(engine::NodeId id, engine::LogicalResource resource);
         void startSequence(engine::NodeId id);
+        void clearPrepared(engine::LogicalResource resource);
 
         void markOnAir(engine::NodeId itemId);
         void releaseResource(engine::LogicalResource resource, engine::NodeState previousState);
         void interruptSequencesUsing(engine::LogicalResource resource, engine::NodeId except = engine::RootId);
         engine::NodeId sequenceOwning(engine::LogicalResource resource) const;
+        bool isActive(const RunningSequence& running) const;
         void sequenceEvent(engine::NodeId sequenceId, const engine::SequenceEvent& event);
-        void sendTransport(engine::LogicalResource resource, const std::string& command, const QString& label);
+        void sendTransport(engine::LogicalResource resource, const std::string& command, const QString& label,
+                           std::function<void()> onSuccess = {});
 
         void clipEnded(engine::LogicalResource resource);
+        void nodesAboutToBeRemoved(const QList<engine::NodeId>& ids);
+        void connectionChanged(const QString& server, bool connected);
 };

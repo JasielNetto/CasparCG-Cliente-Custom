@@ -72,11 +72,24 @@ MainWindow::MainWindow(QWidget* parent)
     QObject::connect(this->connections, &ConnectionManager::connectionChanged, this, [this]() { refreshServerStatus(); });
     QObject::connect(this->connections, &ConnectionManager::serversChanged, this, [this]() { refreshServerStatus(); });
     QObject::connect(this->model, &RundownModel::modifiedChanged, this, [this]() { refreshTitle(); });
+    QObject::connect(this->connections, &ConnectionManager::oscError, this, [this](const QString& text) {
+        statusBar()->showMessage(text);  // fica até a próxima mensagem
+        refreshServerStatus();
+    });
 
     resize(1500, 860);
     restoreLayout();
     loadStation();
     refreshTitle();
+}
+
+MainWindow::~MainWindow()
+{
+    // A execução depende das conexões (porta AMCP, OSC): destruí-la primeiro, antes que a queda das
+    // conexões dispare callbacks com a janela pela metade.
+    this->execution->disconnect(this);
+    delete this->execution;
+    this->execution = nullptr;
 }
 
 void MainWindow::buildMenus()
@@ -125,6 +138,16 @@ void MainWindow::loadStation()
         this->station = StationStore::defaults();
     }
 
+    // station.json pode ter sido editado à mão: mostrar o que não passa na validação.
+    const std::vector<engine::ConfigIssue> issues = this->station.validate();
+    if (!issues.empty())
+    {
+        QStringList lines;
+        for (const engine::ConfigIssue& issue : issues)
+            lines << QString("• %1 — %2").arg(QString::fromUtf8(engine::toString(issue.error)), QString::fromStdString(issue.subject));
+        QMessageBox::warning(this, tr("Estação"), tr("A configuração da estação tem problemas:\n\n%1\n\nCorrija em Estação → Configurar.").arg(lines.join('\n')));
+    }
+
     this->connections->apply(this->station);
     this->execution->setStation(this->station);
     refreshServerStatus();
@@ -161,7 +184,8 @@ void MainWindow::refreshServerStatus()
         const QString color = QString::fromLatin1(online ? "#3fb950" : "#e0574f");
         parts << QString("<span style='color:%1'>●</span> %2").arg(color, name.toHtmlEscaped());
     }
-    parts << tr("OSC %1").arg(this->connections->oscPort());
+    parts << (this->connections->isOscListening() ? tr("OSC %1").arg(this->connections->oscPort())
+                                                  : tr("<span style='color:#e0574f'>OSC %1 indisponível</span>").arg(this->connections->oscPort()));
     this->serverStatus->setText(parts.join("&nbsp;&nbsp;&nbsp;"));
 }
 

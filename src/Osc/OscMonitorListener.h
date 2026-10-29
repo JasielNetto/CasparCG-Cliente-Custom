@@ -20,7 +20,8 @@ class OSC_EXPORT OscMonitorListener : public QObject, public osc::OscPacketListe
         explicit OscMonitorListener(QObject* parent = 0);
         ~OscMonitorListener();
 
-        void start(int port);
+        // Retorna false se a porta UDP nao puder ser aberta (ex.: ja em uso).
+        bool start(int port);
 
         Q_SIGNAL void messageReceived(const QString&, const QList<QVariant>&);
 

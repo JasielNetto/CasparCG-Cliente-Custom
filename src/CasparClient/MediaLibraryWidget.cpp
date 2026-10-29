@@ -141,6 +141,9 @@ void MediaLibraryWidget::reloadServers()
 
 void MediaLibraryWidget::reloadMedia()
 {
+    // Com a ordenação ligada, cada linha inserida reordenaria a árvore inteira.
+    this->view->setSortingEnabled(false);
+    this->filter->setDynamicSortFilter(false);
     this->items->removeRows(0, this->items->rowCount());
 
     QMap<QString, QStandardItem*> folders;  // caminho da pasta -> item
@@ -186,6 +189,8 @@ void MediaLibraryWidget::reloadMedia()
         parent->appendRow({ name, type, duration });
     }
 
+    this->filter->setDynamicSortFilter(true);
+    this->view->setSortingEnabled(true);
     if (!this->search->text().isEmpty())
         this->view->expandAll();
 }

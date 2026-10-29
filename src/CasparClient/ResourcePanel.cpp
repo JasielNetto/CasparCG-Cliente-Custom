@@ -151,8 +151,24 @@ void ResourcePanel::refreshDestination()
     this->destination->setText(tr("%1 · canal %2 · layer %3").arg(server).arg(endpoint->channel).arg(endpoint->layer));
 
     const bool online = this->connections->isConnected(server);
-    this->connection->setText(online ? tr("● conectado") : tr("● desconectado"));
-    this->connection->setStyleSheet(online ? "color: #3fb950;" : "color: #e0574f;");
+    const bool osc = this->execution->monitor(this->target) != nullptr && this->connections->isOscListening();
+    if (!online)
+    {
+        this->connection->setText(tr("● desconectado"));
+        this->connection->setStyleSheet("color: #e0574f;");
+    }
+    else if (!osc)
+    {
+        this->connection->setText(tr("● sem OSC"));
+        this->connection->setStyleSheet("color: #e0a800;");
+        this->connection->setToolTip(tr("Sem OSC não há tempo no painel nem avanço automático de Sequência"));
+    }
+    else
+    {
+        this->connection->setText(tr("● conectado"));
+        this->connection->setStyleSheet("color: #3fb950;");
+        this->connection->setToolTip(QString());
+    }
 }
 
 void ResourcePanel::refreshItem()

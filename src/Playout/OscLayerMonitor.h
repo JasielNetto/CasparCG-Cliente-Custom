@@ -27,8 +27,10 @@ class OscLayerMonitor : public QObject
 
         const engine::Endpoint& endpoint() const { return this->target; }
 
-        void setTolerance(double seconds);
         void restart();
+
+        // Zera o que se sabe do layer (apos STOP/CLEAR o servidor para de enviar OSC dele).
+        void resetState();
 
         double elapsed() const { return this->lastElapsed; }
         double total() const { return this->lastTotal; }

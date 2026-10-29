@@ -164,6 +164,28 @@ static void conjuntoRespostasAdiadasForaDeOrdem()
     CHECK(report && report->status == FireStatus::Success);
 }
 
+static void conjuntoBeforeTakeSoComPreparacaoOk()
+{
+    FakePlayoutPort port;
+    int calls = 0;
+    std::size_t callsAtBeforeTake = 0;
+    Conjunto c{ "C", { item("vt", LogicalResource::Vt), item("s1", LogicalResource::Selo1) } };
+    fire(c, stationMap(), port, [](const FireReport&) {}, [&]() { ++calls; callsAtBeforeTake = port.calls.size(); });
+    CHECK(calls == 1);
+    CHECK(callsAtBeforeTake == 2);  // depois das 2 preparações, antes de qualquer take
+
+    FakePlayoutPort failing;
+    failing.failOn("prepare", "S1", 1, 20);
+    int abortedCalls = 0;
+    fire(c, stationMap(), failing, [](const FireReport&) {}, [&]() { ++abortedCalls; });
+    CHECK(abortedCalls == 0);
+
+    int rejectedCalls = 0;
+    Conjunto dup{ "D", { item("a", LogicalResource::Vt), item("b", LogicalResource::Vt) } };
+    fire(dup, stationMap(), port, [](const FireReport&) {}, [&]() { ++rejectedCalls; });
+    CHECK(rejectedCalls == 0);
+}
+
 // ---------- Sequência ----------
 
 struct Recorder
@@ -282,6 +304,21 @@ static void sequenciaErroNoTake()
     CHECK(runner.start());
     CHECK(runner.state() == SequenceState::Error);
     CHECK(rec.events.back().error == "servidor recusou");
+}
+
+static void sequenciaErroApontaItemQueFalhou()
+{
+    FakePlayoutPort port;
+    Recorder rec;
+    const ResourceMap map = stationMap();
+    SequenceRunner runner({ "SEQ", { item("a", LogicalResource::Vt), item("b", LogicalResource::Selo1) }, RepeatMode::Once }, map, port, rec.listener());
+    port.failOn("take", "S1", 1, 20, "selo recusado");
+    CHECK(runner.start());
+    runner.onItemFinished("a");
+    CHECK(runner.state() == SequenceState::Error);
+    CHECK(rec.events.back().itemId == "a");        // o que estava no ar
+    CHECK(rec.events.back().failedItemId == "b");  // o que falhou
+    CHECK(rec.events.back().failedIndex == 1);
 }
 
 static void sequenciaFimAntesDaPreCarga()
@@ -405,6 +442,44 @@ static void fimDeClipeIgnoraDuracaoDesconhecida()
     CHECK(!d.update(200.0, -1.0));
 }
 
+static void fimDeClipeQuandoTempoPara()
+{
+    ClipEndDetector d;
+    CHECK(!d.update(9.80, 10.0));   // OSC parou 0,2 s antes do fim
+    CHECK(!d.update(9.80, 10.0));
+    CHECK(!d.update(9.80, 10.0));
+    CHECK(d.update(9.80, 10.0));    // 3 atualizações paradas perto do fim
+    CHECK(!d.update(9.80, 10.0));
+
+    ClipEndDetector pausado;        // pausa longe do fim não é fim
+    for (int i = 0; i < 10; ++i)
+        CHECK(!pausado.update(4.0, 10.0));
+}
+
+static void fimDeClipeToleranciaPorQuadro()
+{
+    ClipEndDetector d;
+    d.setFps(25.0);
+    CHECK(d.toleranceSeconds() == 0.1);
+    CHECK(d.update(9.9, 10.0));     // 2,5 quadros a 25 fps
+    ClipEndDetector e;
+    e.setFps(59.94);
+    CHECK(e.toleranceSeconds() == ClipEndDetector::DefaultTolerance);
+    e.setFps(0.0);
+    CHECK(e.toleranceSeconds() == ClipEndDetector::DefaultTolerance);
+}
+
+static void nomeDoClipeConfere()
+{
+    CHECK(clipMatches("ABERTURA.mp4", "JORNAL/ABERTURA"));
+    CHECK(clipMatches("jornal/abertura.MOV", "JORNAL/ABERTURA"));
+    CHECK(clipMatches("JORNAL\\ABERTURA.mxf", "jornal/abertura"));
+    CHECK(clipMatches("", "JORNAL/ABERTURA"));
+    CHECK(!clipMatches("VINHETA.mp4", "JORNAL/ABERTURA"));
+    CHECK(!clipMatches("NOVA_ABERTURA.mp4", "JORNAL/ABERTURA"));  // sufixo sem barra não vale
+    CHECK(clipMatches("v1.2/clip.mp4", "V1.2/CLIP"));
+}
+
 int main()
 {
     const std::vector<std::pair<const char*, std::function<void()>>> tests = {
@@ -416,6 +491,7 @@ int main()
         { "conjunto: falha parcial no take", conjuntoFalhaParcialNoTake },
         { "conjunto: todos os takes falham", conjuntoTodosTakesFalham },
         { "conjunto: respostas adiadas fora de ordem", conjuntoRespostasAdiadasForaDeOrdem },
+        { "conjunto: beforeTake só com preparação ok", conjuntoBeforeTakeSoComPreparacaoOk },
         { "sequência: uma vez termina", sequenciaUmaVezTermina },
         { "sequência: loop volta ao início", sequenciaLoopVoltaAoInicio },
         { "sequência: loop de um item", sequenciaLoopDeUmItem },
@@ -424,6 +500,7 @@ int main()
         { "sequência: interrupção não envia comandos", sequenciaInterrupcaoNaoEnviaComandos },
         { "sequência: erro no take", sequenciaErroNoTake },
         { "sequência: fim antes da pré-carga", sequenciaFimAntesDaPreCarga },
+        { "sequência: erro aponta o item que falhou", sequenciaErroApontaItemQueFalhou },
         { "sequência: destruída com respostas pendentes", sequenciaDestruidaComRespostasPendentes },
         { "sequência: recurso sem destino não inicia", sequenciaRecursoSemDestinoNaoInicia },
         { "sequência: troca de destino tira o anterior", sequenciaTrocaDeDestinoTiraAnterior },
@@ -431,7 +508,10 @@ int main()
         { "amcp: lê respostas RES", amcpLeRespostas },
         { "fim de clipe: dispara uma vez", fimDeClipeDisparaUmaVez },
         { "fim de clipe: rearma com novo clipe", fimDeClipeRearmaComNovoClipe },
-        { "fim de clipe: ignora duração desconhecida", fimDeClipeIgnoraDuracaoDesconhecida } };
+        { "fim de clipe: ignora duração desconhecida", fimDeClipeIgnoraDuracaoDesconhecida },
+        { "fim de clipe: tempo parado perto do fim", fimDeClipeQuandoTempoPara },
+        { "fim de clipe: tolerância por quadro", fimDeClipeToleranciaPorQuadro },
+        { "fim de clipe: nome do clipe confere", nomeDoClipeConfere } };
 
     for (const auto& [name, test] : tests)
     {

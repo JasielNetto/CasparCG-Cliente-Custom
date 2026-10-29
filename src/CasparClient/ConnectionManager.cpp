@@ -3,6 +3,8 @@
 #include "CasparDevice.h"
 #include "OscMonitorListener.h"
 
+#include <QtNetwork/QHostAddress>
+
 ConnectionManager::ConnectionManager(QObject* parent)
     : QObject(parent)
 {
@@ -39,6 +41,7 @@ void ConnectionManager::apply(const engine::StationConfig& config)
         device->disconnectDevice();
         this->configs.remove(name);
         this->mediaLists.remove(name);
+        this->resolvedHosts.remove(name);
     }
 
     // Cria os novos.
@@ -52,6 +55,12 @@ void ConnectionManager::apply(const engine::StationConfig& config)
         QObject::connect(device.data(), &CasparDevice::mediaChanged, this, &ConnectionManager::deviceMediaChanged);
         this->devices.insert(it.key(), device);
         this->configs.insert(it.key(), it.value());
+
+        // Endereço IP literal não precisa de resolução (que bloquearia a interface).
+        const QString host = QString::fromStdString(it->host);
+        if (!QHostAddress(host).isNull())
+            this->resolvedHosts.insert(it.key(), host);
+
         device->connectDevice();
     }
 
@@ -60,9 +69,12 @@ void ConnectionManager::apply(const engine::StationConfig& config)
     {
         delete this->osc;
         this->osc = new OscMonitorListener(this);
-        this->osc->start(config.oscPort);
+        this->oscListening = this->osc->start(config.oscPort);
         this->currentOscPort = config.oscPort;
         emit oscSourceChanged();
+        if (!this->oscListening)
+            emit oscError(tr("Não foi possível abrir a porta OSC %1 (já está em uso?). Sem OSC, não há tempo "
+                             "nos painéis nem avanço automático das Sequências.").arg(config.oscPort));
     }
 
     emit serversChanged();
@@ -86,8 +98,8 @@ bool ConnectionManager::isConnected(const QString& name) const
 
 QString ConnectionManager::hostAddress(const QString& name) const
 {
-    const QSharedPointer<CasparDevice> device = this->devices.value(name);
-    return device.isNull() ? QString() : device->resolveIpAddress();
+    // Nomes de host são resolvidos uma vez, ao conectar (ver deviceConnectionChanged).
+    return this->resolvedHosts.value(name);
 }
 
 QObject* ConnectionManager::oscSource() const
@@ -122,7 +134,12 @@ void ConnectionManager::deviceConnectionChanged(CasparDevice& device)
         return;
 
     if (device.isConnected())
+    {
+        // Conectado, a resolução já está no cache do sistema e é imediata.
+        if (!this->resolvedHosts.contains(name))
+            this->resolvedHosts.insert(name, device.resolveIpAddress());
         device.refreshMedia();
+    }
     emit connectionChanged(name, device.isConnected());
 }
 

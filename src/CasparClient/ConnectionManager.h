@@ -35,6 +35,7 @@ class ConnectionManager : public QObject
 
         QObject* oscSource() const;
         int oscPort() const { return this->currentOscPort; }
+        bool isOscListening() const { return this->oscListening; }
 
         QList<CasparMedia> media(const QString& server) const;
         void refreshMedia(const QString& server);
@@ -43,6 +44,7 @@ class ConnectionManager : public QObject
         Q_SIGNAL void connectionChanged(const QString& name, bool connected);
         Q_SIGNAL void mediaChanged(const QString& name);
         Q_SIGNAL void oscSourceChanged();
+        Q_SIGNAL void oscError(const QString& message);
 
     private:
         QMap<QString, QSharedPointer<CasparDevice>> devices;
@@ -50,6 +52,8 @@ class ConnectionManager : public QObject
         QMap<QString, QList<CasparMedia>> mediaLists;
         OscMonitorListener* osc = nullptr;
         int currentOscPort = 0;
+        bool oscListening = false;
+        QMap<QString, QString> resolvedHosts;  // nome do servidor -> IP (o OSC chega com o IP de origem)
 
         QString nameOf(const CasparDevice* device) const;
 

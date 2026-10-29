@@ -125,7 +125,7 @@ namespace engine
                 return;
             if (!result.ok)
             {
-                fail(result.error);
+                fail(result.error, target);
                 return;
             }
             takePrepared(target);
@@ -145,7 +145,7 @@ namespace engine
                 return;
             if (!result.ok)
             {
-                fail(result.error);
+                fail(result.error, target);
                 return;
             }
 
@@ -185,19 +185,19 @@ namespace engine
             if (result.ok)
                 takePrepared(next);
             else
-                fail(result.error);
+                fail(result.error, next);
         });
     }
 
-    void SequenceRunner::fail(const std::string& error)
+    void SequenceRunner::fail(const std::string& error, int failedIndex)
     {
         ++generation;
         advancing = false;
         currentState = SequenceState::Error;
-        publish(error);
+        publish(error, failedIndex);
     }
 
-    void SequenceRunner::publish(const std::string& error)
+    void SequenceRunner::publish(const std::string& error, int failedIndex)
     {
         if (!listener)
             return;
@@ -207,6 +207,11 @@ namespace engine
         if (index >= 0)
             event.itemId = sequence.items[static_cast<std::size_t>(index)].id;
         event.error = error;
+        if (failedIndex >= 0 && failedIndex < static_cast<int>(sequence.items.size()))
+        {
+            event.failedIndex = failedIndex;
+            event.failedItemId = sequence.items[static_cast<std::size_t>(failedIndex)].id;
+        }
         listener(event);
     }
 }

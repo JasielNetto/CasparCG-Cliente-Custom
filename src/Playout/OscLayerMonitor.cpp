@@ -13,14 +13,27 @@ OscLayerMonitor::OscLayerMonitor(const engine::Endpoint& endpoint, const QString
                          this, SLOT(messageReceived(const QString&, const QList<QVariant>&)));
 }
 
-void OscLayerMonitor::setTolerance(double seconds)
-{
-    this->detector = engine::ClipEndDetector(seconds);
-}
-
 void OscLayerMonitor::restart()
 {
     this->detector.reset();
+}
+
+void OscLayerMonitor::resetState()
+{
+    this->detector.reset();
+    this->lastElapsed = 0.0;
+    this->lastTotal = 0.0;
+    emit timeChanged(0.0, 0.0);
+    if (!this->lastName.isEmpty())
+    {
+        this->lastName.clear();
+        emit clipNameChanged(QString());
+    }
+    if (this->paused)
+    {
+        this->paused = false;
+        emit pausedChanged(false);
+    }
 }
 
 void OscLayerMonitor::messageReceived(const QString& path, const QList<QVariant>& arguments)
@@ -41,6 +54,7 @@ void OscLayerMonitor::messageReceived(const QString& path, const QList<QVariant>
         if (fps > 0.0 && std::fabs(fps - this->lastFps) > 1e-6)
         {
             this->lastFps = fps;
+            this->detector.setFps(fps);
             emit fpsChanged(fps);
         }
         return;
@@ -59,7 +73,8 @@ void OscLayerMonitor::messageReceived(const QString& path, const QList<QVariant>
         this->lastTotal = arguments.at(1).toDouble();
         emit timeChanged(this->lastElapsed, this->lastTotal);
 
-        if (this->detector.update(this->lastElapsed, this->lastTotal))
+        // Pausado, o tempo fica parado de proposito: nao alimenta a deteccao de fim.
+        if (!this->paused && this->detector.update(this->lastElapsed, this->lastTotal))
             emit clipEnded();
     }
     else if (key == "file/name")

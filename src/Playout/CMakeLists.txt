@@ -25,3 +25,8 @@ target_link_libraries(playout PUBLIC
     Qt::Core
     Qt::Network
 )
+
+# Fontes em UTF-8.
+if (MSVC)
+    target_compile_options(playout PRIVATE /utf-8)
+endif()

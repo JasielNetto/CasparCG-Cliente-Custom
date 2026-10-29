@@ -80,6 +80,25 @@ Regras de execução (`ExecutionController`):
 - fim de clipe (OSC) avança a Sequência dona do recurso ou marca o item como concluído;
 - Bloco não executa.
 
+### D-09 — Regras de segurança da execução, após revisão independente (2026-10-29)
+- **Recurso de Sequência em execução é dela.** O preparo manual (F7) nesse recurso é recusado com aviso,
+  porque a pré-carga da Sequência usa o mesmo background; disparar direto (F8) continua possível.
+  Iniciar uma Sequência descarta o que estava preparado nos recursos dela.
+- **Interrupção só depois do sucesso da preparação.** `engine::fire` chama `beforeTake` quando todas as
+  preparações deram certo; é ali que a Sequência do recurso é interrompida. Disparo bloqueado ou abortado
+  não derruba a Sequência.
+- **Play do painel nunca manda PLAY às cegas.** Retoma a pausa ou faz o take do que este cliente preparou;
+  sem isso, só avisa "Nada preparado".
+- **Fim de clipe confere o nome** (`engine::clipMatches`) com a mídia esperada; tolerância de ~2,5 quadros e
+  detecção de tempo parado perto do fim. Pausado não conta como fim.
+- **Época.** Trocar de rundown ou de estação incrementa a época; respostas atrasadas da época anterior são
+  ignoradas (ids de nó se repetem entre rundowns).
+- Item removido do rundown deixa de ser acompanhado (continua no ar no servidor); Sequência com nó removido
+  é interrompida. Queda de servidor descarta o que estava preparado nele.
+- Stop/Clear só liberam o recurso na tela quando o servidor confirma.
+- Tempo limite padrão do AMCP: 5 s. Porta OSC que não abre é avisada na barra de status e nos painéis.
+- F7/F8/F9 sem repetição por tecla segurada.
+
 ## Estrutura do núcleo (`src/Engine`)
 - `Resource.h` — recursos lógicos (VT, Selo 1, Selo 2) e `ResourceMap` (recurso → servidor/canal/layer).
 - `Item.h` — item executável.
@@ -112,6 +131,9 @@ Em GCC/Clang compila com `-Werror` e ASan/UBSan (desligue com `-DENGINE_SANITIZE
 ## Pendências e hipóteses
 - No cliente antigo só a Sequência mínima (D-07) usa o núcleo; o CasparClient (D-08) usa tudo.
 - CasparClient: InPoint/OutPoint, seek, transições, preview, dois playouts, MOS e trigger externo ainda não.
+- Revisão (pendentes de baixa prioridade): tempo limite reportado como falha embora o comando possa
+  executar depois; Conjunto fica "No ar" depois que os filhos saem; arrastar entre duas instâncias do
+  cliente; `removeRows` sempre recusado no modelo do rundown.
 - Rollback em falha parcial de Conjunto: não implementado; decidir com a operação.
 - Precedência entre execuções: hipótese adotada é que a execução nova assume o recurso e a anterior
   recebe `interrupt()`. O árbitro de recursos ainda não existe.

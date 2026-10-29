@@ -54,6 +54,8 @@ namespace engine
         int index = -1;      // item corrente (-1 se nenhum)
         std::string itemId;
         std::string error;
+        int failedIndex = -1;      // em Error: o item cuja preparação/take falhou (pode diferir de index)
+        std::string failedItemId;
     };
 
     using SequenceListener = std::function<void(const SequenceEvent&)>;
@@ -88,8 +90,8 @@ namespace engine
         void goTo(int target);
         void takePrepared(int target);
         void preloadNext();
-        void fail(const std::string& error);
-        void publish(const std::string& error = {});
+        void fail(const std::string& error, int failedIndex);
+        void publish(const std::string& error = {}, int failedIndex = -1);
         Endpoint endpointOf(int i) const;
 
         Sequence sequence;

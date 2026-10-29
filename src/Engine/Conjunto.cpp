@@ -70,6 +70,7 @@ namespace engine
             std::vector<Item> items;
             PlayoutPort* port = nullptr;
             FireCallback done;
+            BeforeTake beforeTake;
             std::size_t pending = 0;
         };
 
@@ -119,17 +120,20 @@ namespace engine
                 op->done(op->report);
                 return;
             }
+            if (op->beforeTake)
+                op->beforeTake();
             startTake(op);
         }
     }
 
-    void fire(const Conjunto& conjunto, const ResourceMap& map, PlayoutPort& port, FireCallback done)
+    void fire(const Conjunto& conjunto, const ResourceMap& map, PlayoutPort& port, FireCallback done, BeforeTake beforeTake)
     {
         auto op = std::make_shared<FireOperation>();
         op->report.conjuntoId = conjunto.id;
         op->report.validation = validate(conjunto, map);
         op->port = &port;
         op->done = std::move(done);
+        op->beforeTake = std::move(beforeTake);
 
         for (const Item& item : conjunto.items)
             op->report.items.push_back({ item.id, item.resource, ItemOutcome::NotAttempted, {} });
