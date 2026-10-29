@@ -145,15 +145,26 @@ namespace engine
         return false;
     }
 
-    bool Rundown::move(NodeId id, NodeId newParent, int index)
+    bool Rundown::canMove(NodeId id, NodeId newParent) const
     {
-        Node* node = get(id);
-        if (id == RootId || node == nullptr || nodes.count(newParent) == 0)
+        const Node* node = find(id);
+        if (node == nullptr || nodes.count(newParent) == 0)
             return false;
         if (isDescendant(newParent, id))  // inclui newParent == id
             return false;
-        if (!canContain(kindForParent(newParent), node->kind))
+        return canContain(kindForParent(newParent), node->kind);
+    }
+
+    bool Rundown::canAdd(NodeId parent, NodeKind kind) const
+    {
+        return nodes.count(parent) > 0 && canContain(kindForParent(parent), kind);
+    }
+
+    bool Rundown::move(NodeId id, NodeId newParent, int index)
+    {
+        if (!canMove(id, newParent))
             return false;
+        Node* node = get(id);
 
         auto& oldSiblings = nodes.at(node->parent).children;
         oldSiblings.erase(std::remove(oldSiblings.begin(), oldSiblings.end(), id), oldSiblings.end());

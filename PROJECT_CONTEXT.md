@@ -62,6 +62,24 @@ vídeo selecionados, na ordem visual (grupo selecionado inclui seus itens). Regr
 Implementação: `src/Core/SequenceController` (núcleo + `AmcpPlayoutPort` + `OscClipEndWatcher`).
 As ações novas ficam no fim do menu porque o restante dele é habilitado por posição.
 
+### D-08 — CasparClient: cliente novo no mesmo repositório (2026-10-29)
+Executável novo `casparclient` (`src/CasparClient`, Qt Widgets), ao lado do cliente antigo, que continua
+sendo compilado e entregue. Reaproveita `engine`, `playout`, `caspar` e `osc`; **não** usa o banco de dados
+nem os widgets do cliente antigo.
+- Configuração própria em `station.json` (pasta de configuração do usuário: `QStandardPaths::AppConfigLocation`).
+- Rundown salvo em `.ccrundown` (JSON); estados operacionais não são salvos.
+- Interface em português; tema escuro (Fusion).
+- Tela: biblioteca de mídia | rundown | painéis VT, Selo 1 e Selo 2.
+- Atalhos: F7 prepara, F8 dispara, F9 para; Ctrl+1/2/3 Bloco/Sequência/Conjunto; Alt+1/2/3 recurso; Ctrl+L loop.
+- Porta OSC configurável (padrão 6250). Cliente antigo e novo no mesmo PC disputariam a mesma porta UDP.
+
+Regras de execução (`ExecutionController`):
+- por recurso, no máximo um nó **no ar** e um **preparado**; um LOADBG novo substitui o preparado anterior;
+- disparar um Item preparado faz só o take; sem preparo, faz LOADBG + PLAY (Conjunto de um item);
+- disparar algo num recurso usado por Sequência em execução a substitui (`interrupt`);
+- fim de clipe (OSC) avança a Sequência dona do recurso ou marca o item como concluído;
+- Bloco não executa.
+
 ## Estrutura do núcleo (`src/Engine`)
 - `Resource.h` — recursos lógicos (VT, Selo 1, Selo 2) e `ResourceMap` (recurso → servidor/canal/layer).
 - `Item.h` — item executável.
@@ -70,10 +88,15 @@ As ações novas ficam no fim do menu porque o restante dele é habilitado por p
 - `Sequence.h` — `SequenceRunner` (uma vez / loop).
 - `AmcpFormat.h` — comandos LOADBG/PLAY/STOP, `REQ` e leitura de `RES`.
 - `ClipEndDetector.h` — detecção de fim de clipe a partir do tempo OSC.
+- `Rundown.h` — árvore Item/Bloco/Sequência/Conjunto com regras de composição e estados.
+- `StationConfig.h` — servidores, recursos e porta OSC, com validação.
+- `TimeFormat.h` — tempo decorrido/restante (segundos reais + quadro).
 
-## Integração no Core (Qt)
-- `src/Core/AmcpPlayoutPort` — implementa `engine::PlayoutPort` sobre os `CasparDevice` do `DeviceManager`.
-- `src/Core/OscClipEndWatcher` — emite `clipEnded()` por destino; alimenta `SequenceRunner::onItemFinished`.
+## Biblioteca Playout (`src/Playout`, Qt, sem banco de dados)
+- `AmcpPlayoutPort` — `engine::PlayoutPort` sobre `CasparDevice`; quem cria informa um `DeviceResolver`.
+- `OscLayerMonitor` — nome, tempo, pausa, loop, fps e fim de clipe de um destino, a partir de qualquer fonte OSC.
+
+## Integração no cliente antigo
 - `src/Caspar/AmcpDevice` — `sendRequest()` e sinal `requestCompleted()`.
 - `src/Core/SequenceController` — Sequência mínima a partir de clipes do rundown (D-07).
 
@@ -87,7 +110,8 @@ Sem Qt e sem servidor real, com playout simulado (`tools/tests/engine/FakePlayou
 Em GCC/Clang compila com `-Werror` e ASan/UBSan (desligue com `-DENGINE_SANITIZERS=OFF`).
 
 ## Pendências e hipóteses
-- Só a Sequência mínima (D-07) usa o núcleo; Conjunto ainda não tem acesso pela interface.
+- No cliente antigo só a Sequência mínima (D-07) usa o núcleo; o CasparClient (D-08) usa tudo.
+- CasparClient: InPoint/OutPoint, seek, transições, preview, dois playouts, MOS e trigger externo ainda não.
 - Rollback em falha parcial de Conjunto: não implementado; decidir com a operação.
 - Precedência entre execuções: hipótese adotada é que a execução nova assume o recurso e a anterior
   recebe `interrupt()`. O árbitro de recursos ainda não existe.

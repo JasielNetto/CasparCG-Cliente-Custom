@@ -76,6 +76,8 @@ namespace engine
 
         bool remove(NodeId id);  // remove o nó e tudo abaixo dele
         bool move(NodeId id, NodeId newParent, int index);
+        bool canMove(NodeId id, NodeId newParent) const;  // mesmas regras de move(), sem alterar nada
+        bool canAdd(NodeId parent, NodeKind kind) const;
 
         bool setLabel(NodeId id, const std::string& label);
         bool setItem(NodeId id, const Item& item);

@@ -103,6 +103,10 @@ static void moverRespeitaRegrasECiclos()
     const NodeId seq = *r.addGroup(NodeKind::Sequencia, b1, -1, "S");
     const NodeId a = *r.addItem(seq, -1, clip("a"), "A");
 
+    CHECK(!r.canMove(b2, b1));
+    CHECK(r.canMove(seq, b2));
+    CHECK(!r.canMove(RootId, b2));
+    CHECK(r.canAdd(b1, NodeKind::Conjunto) && !r.canAdd(seq, NodeKind::Conjunto) && !r.canAdd(777, NodeKind::Item));
     CHECK(!r.move(b2, b1, -1));   // Bloco em Bloco
     CHECK(!r.move(seq, seq, -1)); // em si mesmo
     CHECK(!r.move(seq, a, -1));   // em descendente (Item)
