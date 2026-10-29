@@ -46,6 +46,8 @@
 #include <QtNetwork/QNetworkReply>
 #include <QtNetwork/QNetworkAccessManager>
 
+class SequenceController;
+
 class WIDGETS_EXPORT RundownTreeWidget : public QWidget, Ui::RundownTreeWidget
 {
     Q_OBJECT
@@ -116,6 +118,18 @@ class WIDGETS_EXPORT RundownTreeWidget : public QWidget, Ui::RundownTreeWidget
         OscSubscription* clearChannelControlSubscription;
 
         QSharedPointer<RepositoryDevice> repositoryDevice;
+
+        // Sequencia minima (nucleo de execucao): roda os videos selecionados em ordem.
+        SequenceController* sequenceController = nullptr;
+        QAction* runSequenceAction = nullptr;
+        QAction* runSequenceLoopAction = nullptr;
+        QAction* stopSequenceAction = nullptr;
+
+        void runSelectionAsSequence(bool loop);
+        Q_SLOT void runSelectionAsSequenceOnce();
+        Q_SLOT void runSelectionAsSequenceLoop();
+        Q_SLOT void stopSequence();
+        Q_SLOT void sequenceStatusChanged(const QString& message, bool isError);
 
         QNetworkAccessManager* networkManager;
 

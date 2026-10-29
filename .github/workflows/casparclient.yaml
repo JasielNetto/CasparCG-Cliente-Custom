@@ -1,0 +1,51 @@
+name: CasparClient
+
+# Verificação rápida do cliente novo e do núcleo: compila só o necessário, roda os testes do núcleo
+# e publica os erros do compilador como anotações (visíveis na aba de checks do PR).
+
+on:
+    push:
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    check:
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-22.04, ubuntu-24.04]
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                submodules: true
+
+            - name: Dependências
+              run: |
+                  sudo apt update
+                  sudo apt install cmake libboost-thread-dev libasio-dev qt6-base-dev libqt6websockets6-dev libqt6core5compat6-dev libgl1-mesa-dev libvlc-dev libvlccore-dev
+
+            - name: Testes do núcleo (sem Qt)
+              run: |
+                  cmake -S tools/tests/engine -B build-engine-tests
+                  cmake --build build-engine-tests -j4
+                  ctest --test-dir build-engine-tests --output-on-failure
+
+            - name: Compilar CasparClient
+              shell: bash
+              run: |
+                  set -o pipefail
+                  cmake -S src -B build-casparclient > cmake.log 2>&1 || { tail -40 cmake.log; exit 1; }
+                  cmake --build build-casparclient --target casparclient -j4 2>&1 | tee build.log
+
+            - name: Publicar erros como anotações
+              if: failure()
+              shell: bash
+              run: |
+                  # O GitHub mostra no máximo 10 anotações de erro por passo: as primeiras são as que importam.
+                  cat cmake.log build.log 2>/dev/null \
+                      | grep -E "error:|Error:|undefined reference|CMake Error" \
+                      | awk '!seen[$0]++' | head -10 \
+                      | while IFS= read -r line; do echo "::error::${line//%/%25}"; done

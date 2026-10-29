@@ -40,6 +40,8 @@ mkdir "%CLIENT_FOLDER%\%CLIENT_FOLDER%" || goto :error
 echo Copying binaries...
 xcopy Release\* "%CLIENT_FOLDER%\%CLIENT_FOLDER%\"  /E /I /Y
 call "%BUILD_QT_PATH%\msvc2019_64\bin\windeployqt.exe" --dir "%CLIENT_FOLDER%\%CLIENT_FOLDER%" Release\casparcg-client.exe
+:: CasparClient (cliente novo) no mesmo pacote
+if exist Release\casparclient.exe call "%BUILD_QT_PATH%\msvc2019_64\bin\windeployqt.exe" --dir "%CLIENT_FOLDER%\%CLIENT_FOLDER%" Release\casparclient.exe
 
 :: Copy documentation
 echo Copying documentation...

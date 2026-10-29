@@ -133,6 +133,16 @@ bool AmcpDevice::mirrorWrite(const QByteArray& payload)
     return true;
 }
 
+bool AmcpDevice::sendRequest(const QString& id, const QString& command)
+{
+    if (!this->connected || this->disableCommands)
+        return false;
+
+    // O Mirror replica o comando interno sem o prefixo REQ (ver MirrorTranslator.h).
+    writeMessage(QString("REQ %1 %2").arg(id, command));
+    return true;
+}
+
 void AmcpDevice::writeMessage(const QString& message)
 {
     const bool writeOwn = this->connected && !this->disableCommands;
@@ -240,10 +250,22 @@ void AmcpDevice::parseLine(const QString& line)
     }
 }
 
-void AmcpDevice::parseHeader(const QString& line)
+void AmcpDevice::parseHeader(const QString& rawLine)
 {
-    if (line.length() == 0)
+    if (rawLine.length() == 0)
         return;
+
+    // "RES <id> <codigo> ...": guarda o id e segue com o restante como uma resposta comum.
+    QString line = rawLine;
+    if (line.startsWith("RES "))
+    {
+        const QStringList parts = line.split(" ", Qt::SkipEmptyParts);
+        if (parts.count() >= 3)
+        {
+            this->requestId = parts.at(1);
+            line = parts.mid(2).join(" ");
+        }
+    }
 
     QStringList tokens = line.split(" ");
 
@@ -262,7 +284,8 @@ void AmcpDevice::parseHeader(const QString& line)
             return;
     }
 
-    this->command = translateCommand(tokens.at(1));
+    if (tokens.count() > 1)
+        this->command = translateCommand(tokens.at(1));
     if (tokens.count() > 3)
         this->command = translateCommand(QString("%1 %2").arg(tokens.at(1)).arg(tokens.at(2)));
 
@@ -273,7 +296,7 @@ void AmcpDevice::parseOneline(const QString& line)
 {
     AmcpDevice::response.append(line);
 
-    sendNotification();
+    dispatchResponse();
 }
 
 void AmcpDevice::parseTwoline(const QString& line)
@@ -281,19 +304,39 @@ void AmcpDevice::parseTwoline(const QString& line)
     AmcpDevice::response.append(line);
 
     if (AmcpDevice::response.count() == 2)
-        sendNotification();
+        dispatchResponse();
 }
 
 void AmcpDevice::parseMultiline(const QString& line)
 {
     if (line.length() == 0)
-        sendNotification();
+        dispatchResponse();
     else
         AmcpDevice::response.append(line);
 }
 
+void AmcpDevice::dispatchResponse()
+{
+    if (this->requestId.isEmpty())
+    {
+        sendNotification();
+        return;
+    }
+
+    const QString id = this->requestId;
+    const int responseCode = this->code;
+    const QList<QString> lines = this->response;
+    resetDevice();
+
+    qDebug("Received response %s from %s:%d: %s", qPrintable(id), qPrintable(this->address), this->port,
+           lines.isEmpty() ? "" : qPrintable(lines.at(0).trimmed()));
+
+    emit requestCompleted(id, responseCode, lines);
+}
+
 void AmcpDevice::resetDevice()
 {
+    this->requestId.clear();
     this->code = 0;
     this->response.clear();
     this->command = AmcpDeviceCommand::NONE;

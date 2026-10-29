@@ -27,6 +27,9 @@
 #include "RundownItemFactory.h"
 #include "PresetDialog.h"
 
+#include "SequenceController.h"
+#include "Commands/MovieCommand.h"
+
 #include "GpiManager.h"
 #include "DatabaseManager.h"
 #include "EventManager.h"
@@ -212,6 +215,14 @@ void RundownTreeWidget::setupMenus()
     this->contextMenuRundown->addAction(/*QIcon(":/Graphics/Images/PresetSmall.png"),*/ "Save as Preset...", this, SLOT(saveAsPreset()));
     this->contextMenuRundown->addSeparator();
     this->contextMenuRundown->addAction(/*QIcon(":/Graphics/Images/Remove.png"),*/ "Remove", this, SLOT(removeSelectedItems()));
+    // Acoes da Sequencia ficam no fim: o restante do menu e habilitado/desabilitado por posicao.
+    this->contextMenuRundown->addSeparator();
+    this->runSequenceAction = this->contextMenuRundown->addAction("Run Selection as Sequence", this, SLOT(runSelectionAsSequenceOnce()));
+    this->runSequenceLoopAction = this->contextMenuRundown->addAction("Run Selection as Sequence (Loop)", this, SLOT(runSelectionAsSequenceLoop()));
+    this->stopSequenceAction = this->contextMenuRundown->addAction("Stop Sequence", this, SLOT(stopSequence()));
+
+    this->sequenceController = new SequenceController(this);
+    QObject::connect(this->sequenceController, &SequenceController::statusChanged, this, &RundownTreeWidget::sequenceStatusChanged);
 
     QObject::connect(this->contextMenuTools, SIGNAL(triggered(QAction*)), this, SLOT(contextMenuNewTriggered(QAction*)));
     QObject::connect(this->contextMenuColor, SIGNAL(triggered(QAction*)), this, SLOT(contextMenuColorTriggered(QAction*)));
@@ -901,7 +912,96 @@ void RundownTreeWidget::customContextMenuRequested(const QPoint& point)
         }
     }
 
+    this->stopSequenceAction->setEnabled(this->sequenceController->isRunning());
+
     this->contextMenuRundown->exec(this->treeWidgetRundown->mapToGlobal(point));
+}
+
+void RundownTreeWidget::runSelectionAsSequenceOnce()
+{
+    runSelectionAsSequence(false);
+}
+
+void RundownTreeWidget::runSelectionAsSequenceLoop()
+{
+    runSelectionAsSequence(true);
+}
+
+void RundownTreeWidget::runSelectionAsSequence(bool loop)
+{
+    // Ordem visual do rundown (selectedItems() vem na ordem de selecao). Grupo selecionado inclui seus itens.
+    QList<SequenceController::Clip> clips;
+    int skipped = 0;
+    auto collect = [&clips, &skipped, this](QTreeWidgetItem* item) {
+        RundownMovieWidget* widget = dynamic_cast<RundownMovieWidget*>(this->treeWidgetRundown->itemWidget(item, 0));
+        if (widget == nullptr)
+        {
+            ++skipped;
+            return;
+        }
+        const MovieCommand* command = dynamic_cast<MovieCommand*>(widget->getCommand());
+        const LibraryModel* model = widget->getLibraryModel();
+        if (command == nullptr || model == nullptr)
+        {
+            ++skipped;
+            return;
+        }
+
+        SequenceController::Clip clip;
+        clip.label = model->getLabel();
+        clip.deviceName = model->getDeviceName();
+        clip.channel = command->getChannel();
+        clip.layer = command->getVideolayer();
+        clip.media = command->getVideoName();
+        clip.loop = command->getLoop();
+        clips.append(clip);
+    };
+
+    for (int i = 0; i < this->treeWidgetRundown->topLevelItemCount(); ++i)
+    {
+        QTreeWidgetItem* top = this->treeWidgetRundown->topLevelItem(i);
+        const AbstractRundownWidget* topWidget = dynamic_cast<AbstractRundownWidget*>(this->treeWidgetRundown->itemWidget(top, 0));
+        const bool isGroup = topWidget != nullptr && topWidget->isGroup();
+
+        if (isGroup)
+        {
+            for (int j = 0; j < top->childCount(); ++j)
+            {
+                if (top->isSelected() || top->child(j)->isSelected())
+                    collect(top->child(j));
+            }
+        }
+        else if (top->isSelected())
+        {
+            collect(top);
+        }
+    }
+
+    QString error;
+    if (clips.isEmpty())
+        error = "Select at least one video item";
+    else if (skipped > 0)
+        error = QString("Only video items can run as a sequence (%1 other item(s) selected)").arg(skipped);
+
+    if (error.isEmpty() && this->sequenceController->start(clips, loop, &error))
+        return;
+
+    sequenceStatusChanged(error, true);
+}
+
+void RundownTreeWidget::stopSequence()
+{
+    this->sequenceController->stop();
+}
+
+void RundownTreeWidget::sequenceStatusChanged(const QString& message, bool isError)
+{
+    // Mensagem "no ar" fica fixa; as demais somem depois de alguns segundos.
+    const bool persistent = !isError && message.contains("on air");
+    EventManager::getInstance().fireStatusbarEvent(StatusbarEvent(message, persistent ? 0 : (isError ? 10000 : 5000)));
+
+    if (isError)
+        qWarning("%s", qPrintable(message));
 }
 
 void RundownTreeWidget::contextMenuNewTriggered(QAction* action)

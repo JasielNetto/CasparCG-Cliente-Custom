@@ -40,6 +40,14 @@ class CASPAR_EXPORT AmcpDevice : public QObject
         quint64 getMirroredCount() const;
         quint64 getMirrorDroppedCount() const;
 
+        // --- Requisicao com identificador (CasparCG 2.2+) ---
+        // Envia "REQ <id> <command>". A resposta "RES <id> ..." nao passa pelo tratamento padrao do
+        // dispositivo: ela chega somente pelo sinal requestCompleted, com o mesmo id.
+        // Retorna false (e nada e enviado) se este dispositivo nao estiver conectado.
+        bool sendRequest(const QString& id, const QString& command);
+
+        Q_SIGNAL void requestCompleted(const QString& id, int code, const QList<QString>& response);
+
         Q_SLOT void connectDevice();
 
     protected:
@@ -113,6 +121,12 @@ class CASPAR_EXPORT AmcpDevice : public QObject
         QTextDecoder* decoder = nullptr;
 
         AmcpDeviceParserState state = AmcpDeviceParserState::ExpectingHeader;
+
+        // Id da resposta "RES <id>" em leitura; vazio para respostas sem id.
+        QString requestId;
+
+        // Entrega a resposta completa: pelo sinal requestCompleted (com id) ou pelo fluxo padrao.
+        void dispatchResponse();
 
         void parseLine(const QString& line);
         void parseHeader(const QString& line);

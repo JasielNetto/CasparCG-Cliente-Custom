@@ -23,7 +23,7 @@ OscMonitorListener::~OscMonitorListener()
     }
 }
 
-void OscMonitorListener::start(int port)
+bool OscMonitorListener::start(int port)
 {
     try
     {
@@ -42,10 +42,12 @@ void OscMonitorListener::start(int port)
         this->thread->start();
 
         QTimer::singleShot(200, this, SLOT(sendEventBatch()));
+        return true;
     }
     catch (std::runtime_error &e)
     {
         qDebug("%s", qPrintable(QString::fromStdString(e.what()).trimmed()));
+        return false;
     }
  }
 

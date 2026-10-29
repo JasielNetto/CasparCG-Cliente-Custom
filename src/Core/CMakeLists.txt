@@ -150,6 +150,7 @@ qt_add_library(core
     OscDeviceManager.cpp OscDeviceManager.h
     OscSubscription.cpp OscSubscription.h
     OscWebSocketManager.cpp OscWebSocketManager.h
+    SequenceController.cpp SequenceController.h
     Shared.h
     ThumbnailWorker.cpp ThumbnailWorker.h
 )
@@ -168,6 +169,8 @@ target_compile_definitions(core PUBLIC
 
 target_link_libraries(core PUBLIC
     caspar
+    engine
+    playout
     common
     gpi
     osc
